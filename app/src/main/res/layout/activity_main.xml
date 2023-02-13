@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activities.MainActivity">
+
+    <ImageButton
+        android:id="@+id/bluetooth_button"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:backgroundTint="@color/white"
+        app:tint="@color/grey"
+        android:scaleX="2"
+        android:scaleY="2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/baseline_bluetooth_24" />
+
+    <TextView
+        android:id="@+id/connected_device_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Подключите устройство"
+        android:textColor="@color/red"
+        android:textSize="16sp"
+        android:layout_marginStart="10dp"
+        app:layout_constraintVertical_bias="0.3"
+        app:layout_constraintBottom_toBottomOf="@+id/bluetooth_button"
+        app:layout_constraintStart_toEndOf="@+id/bluetooth_button"
+        app:layout_constraintTop_toTopOf="@+id/bluetooth_button" />
+
+    <TextView
+        android:id="@+id/connection_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Отключено"
+        app:layout_constraintStart_toStartOf="@+id/connected_device_name"
+        app:layout_constraintTop_toBottomOf="@+id/connected_device_name" />
+
+    <ImageButton
+        android:id="@+id/settings_button"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:backgroundTint="@color/white"
+        android:scaleX="2"
+        android:scaleY="2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/baseline_settings_24" />
+
+    <com.example.robotrackrc.customview.JoystickView
+        android:id="@+id/left_joystick"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        app:JV_backgroundColor="#009688"
+        app:JV_borderColor="#00796B"
+        app:JV_borderWidth="5dp"
+        app:JV_buttonColor="#FF6E40"
+        app:JV_buttonSizeRatio="20%"
+        app:JV_fixedCenter="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.example.robotrackrc.customview.JoystickView
+        android:id="@+id/right_joystick"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        app:JV_backgroundColor="#009688"
+        app:JV_borderColor="#00796B"
+        app:JV_borderWidth="5dp"
+        app:JV_buttonColor="#FF6E40"
+        app:JV_buttonSizeRatio="20%"
+        app:JV_fixedCenter="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.9"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/left_angle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Angle:"
+        app:layout_constraintEnd_toEndOf="@+id/left_joystick"
+        app:layout_constraintStart_toStartOf="@+id/left_joystick"
+        app:layout_constraintTop_toBottomOf="@+id/left_joystick" />
+
+    <TextView
+        android:id="@+id/right_angle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Angle:"
+        app:layout_constraintEnd_toEndOf="@+id/right_joystick"
+        app:layout_constraintStart_toStartOf="@+id/right_joystick"
+        app:layout_constraintTop_toBottomOf="@+id/right_joystick" />
+
+    <TextView
+        android:id="@+id/right_strength"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Strength:"
+        app:layout_constraintEnd_toEndOf="@+id/right_angle"
+        app:layout_constraintStart_toStartOf="@+id/right_angle"
+        app:layout_constraintTop_toBottomOf="@+id/right_angle" />
+
+    <TextView
+        android:id="@+id/left_strength"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Strength:"
+        app:layout_constraintEnd_toEndOf="@+id/left_angle"
+        app:layout_constraintStart_toStartOf="@+id/left_angle"
+        app:layout_constraintTop_toBottomOf="@+id/left_angle" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
