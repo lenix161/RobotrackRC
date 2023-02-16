@@ -10,7 +10,6 @@ import java.io.OutputStream
 class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectThread.Listener): Thread() {
     private lateinit var inputStream: InputStream
     private lateinit var outputStream: OutputStream
-    private val toSend = ByteArray(64 + 2)
 
     init {
         try {
@@ -41,15 +40,14 @@ class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectTh
         }
     }
 
-    /**Запись сообщения в output stream ввиде набора байтиов*/
-    fun sedMessage(msg: Int){
+    /** Запись сообщения в output stream ввиде набора байтиов */
+    fun sedMessage(list: List<Int>){
 
         try {
-            outputStream.write(byteArrayOf(msg.toByte(), 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00))
-            Log.d("MyLog", "Outputstream: $msg")
+            outputStream.write(byteArrayOf(list[0].toByte(), 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00))
+            Log.d("MyLog", "Outputstream: ${list[0]}, ${list[1]}, ${list[2]}, ${list[3]}")
         } catch(e: IOException){
             Log.e("MyLog", "Ошибка записи в output stream")
         }
     }
-
 }

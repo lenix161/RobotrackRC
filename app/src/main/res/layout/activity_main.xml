@@ -83,39 +83,39 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/left_angle"
+        android:id="@+id/left_X"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Angle:"
+        android:text="X:"
         app:layout_constraintEnd_toEndOf="@+id/left_joystick"
         app:layout_constraintStart_toStartOf="@+id/left_joystick"
         app:layout_constraintTop_toBottomOf="@+id/left_joystick" />
 
     <TextView
-        android:id="@+id/right_angle"
+        android:id="@+id/right_X"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Angle:"
+        android:text="X:"
         app:layout_constraintEnd_toEndOf="@+id/right_joystick"
         app:layout_constraintStart_toStartOf="@+id/right_joystick"
         app:layout_constraintTop_toBottomOf="@+id/right_joystick" />
 
     <TextView
-        android:id="@+id/right_strength"
+        android:id="@+id/right_Y"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Strength:"
-        app:layout_constraintEnd_toEndOf="@+id/right_angle"
-        app:layout_constraintStart_toStartOf="@+id/right_angle"
-        app:layout_constraintTop_toBottomOf="@+id/right_angle" />
+        android:text="Y:"
+        app:layout_constraintEnd_toEndOf="@+id/right_X"
+        app:layout_constraintStart_toStartOf="@+id/right_X"
+        app:layout_constraintTop_toBottomOf="@+id/right_X" />
 
     <TextView
-        android:id="@+id/left_strength"
+        android:id="@+id/left_Y"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Strength:"
-        app:layout_constraintEnd_toEndOf="@+id/left_angle"
-        app:layout_constraintStart_toStartOf="@+id/left_angle"
-        app:layout_constraintTop_toBottomOf="@+id/left_angle" />
+        android:text="Y:"
+        app:layout_constraintEnd_toEndOf="@+id/left_X"
+        app:layout_constraintStart_toStartOf="@+id/left_X"
+        app:layout_constraintTop_toBottomOf="@+id/left_X" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

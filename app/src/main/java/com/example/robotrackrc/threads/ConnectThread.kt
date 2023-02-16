@@ -3,6 +3,7 @@ package com.example.robotrackrc.threads
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.util.Log
+import com.example.robotrackrc.activities.MainActivity
 import java.io.IOException
 import java.util.*
 
@@ -32,6 +33,7 @@ class ConnectThread(device: BluetoothDevice, private val listener: Listener): Th
 
             sendReceiveThread = SendReceiveThread(socket, listener)
             sendReceiveThread.start()
+            isConnected = true
         } catch (e: SecurityException){
             closeSocket()
             Log.e("MyLog", "Нет прав для подключения по bluetooth")
@@ -42,14 +44,20 @@ class ConnectThread(device: BluetoothDevice, private val listener: Listener): Th
     }
 
 
-    fun closeSocket(){
+    private fun closeSocket(){
         try {
             socket.close()
+            isConnected = false
             listener.onConnect("Отключено")
             Log.d("MyLog", "Отключено")
         } catch (e: IOException){
             Log.e("MyLog", "Невозможно закрыть сокет")
         }
+    }
+
+    companion object{
+        // Флаг состояния подключения к bluetooth устройству
+        var isConnected = false
     }
 
     interface Listener{
