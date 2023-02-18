@@ -11,4 +11,6 @@
     <color name="grey">#808080</color>
     <color name="green">#32CD32</color>
     <color name="blue">#0000FF</color>
+    <color name="orange">#FE6600</color>
+    <color name="light_grey">#dbdbdb</color>
 </resources>

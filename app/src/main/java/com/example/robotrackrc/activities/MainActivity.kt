@@ -6,14 +6,18 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.codertainment.dpadview.DPadView
 import com.example.robotrackrc.BtConnector
 import com.example.robotrackrc.R
 import com.example.robotrackrc.databinding.ActivityMainBinding
 import com.example.robotrackrc.threads.ConnectThread
+
 
 class MainActivity : AppCompatActivity(), ConnectThread.Listener {
     private lateinit var binding: ActivityMainBinding
@@ -60,33 +64,157 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener {
             }
         }
 
-        binding.leftJoystick.isAutoReCenterButton = true
-        binding.leftJoystick.setFixedCenter(true)
-        binding.leftJoystick.setOnMoveListener { angle, strength ->
-            val xy = getJoystickXYCoordinate(angle, strength)
-            leftX = xy.first.toInt()
-            leftY = xy.second.toInt()
+        binding.leftDpad.centerCircleRatio = 4.0f
+        binding.rightDpad.centerCircleRatio = 4.0f
 
-            // Обновляем UI
-            binding.leftX.text = "X: $leftX"
-            binding.leftY.text = "Y: $leftY"
+        /** Обработка взаимодействия с левым Dpad контроллером */
+        binding.leftDpad.onDirectionPressListener = { direction, action ->
+            if (direction != null) {
+                dpadListener(direction, action, "left")
+            }
         }
 
-        binding.rightJoystick.setFixedCenter(true)
-        binding.rightJoystick.setOnMoveListener { angle, strength ->
-            val xy = getJoystickXYCoordinate(angle, strength)
-            rightX = xy.first.toInt()
-            rightY = xy.second.toInt()
+        binding.rightDpad.onDirectionPressListener = {direction, action ->
+            if (direction != null) {
+                dpadListener(direction, action, "right")
+            }
+        }
 
-            // Обновляем UI
-            binding.rightX.text = "X: $rightX"
-            binding.rightY.text = "Y: $rightY"
+        /** Инициализация прослушивателя взаимодействий с левым переключателем */
+        binding.switchLeftControllerType.setOnCheckedChangeListener { buttonView, isChecked ->
+            switchListener(isChecked, "left")
+        }
+
+        /** Инициализация прослушивателя взаимодействий с правым переключателем */
+        binding.switchRightControllerType.setOnCheckedChangeListener { buttonView, isChecked ->
+            switchListener(isChecked, "right")
+        }
+
+        /** Инициализация прослушивателя взаимодействий с левым джойстиком */
+        binding.leftJoystick.isAutoReCenterButton = false
+        binding.leftJoystick.setOnMoveListener { angle, strength ->
+            joystickListener(angle,strength, "left")
+        }
+
+        /** Инициализация прослушивателя взаимодействий с правым джойстиком */
+        binding.rightJoystick.setOnMoveListener { angle, strength ->
+            joystickListener(angle,strength, "right")
         }
 
         /** Запуск потока для отправки данных по bluetooth */
         val thread = Thread(task, "BtSendThread")
         thread.start()
     }
+
+    /** Обработка взаимодействий с переключателем */
+    private fun switchListener(isChecked:Boolean, side: String){
+        when(side){
+            "left" -> {
+                if (isChecked){
+                    binding.leftJoystick.visibility = View.GONE
+                    binding.leftDpad.visibility = View.VISIBLE
+                    leftX = 0
+                    leftY = 0
+                    // Обновляем UI
+                    binding.leftX.text = "X: $leftX"
+                    binding.leftY.text = "Y: $leftY"
+                } else {
+                    binding.leftJoystick.visibility = View.VISIBLE
+                    binding.leftJoystick.resetButtonPosition()
+                    binding.leftDpad.visibility = View.GONE
+                }
+            }
+
+            "right" -> {
+                if (isChecked){
+                    binding.rightJoystick.visibility = View.GONE
+                    binding.rightDpad.visibility = View.VISIBLE
+                    rightX = 0
+                    rightY = 0
+                    // Обновляем UI
+                    binding.rightX.text = "X: $rightX"
+                    binding.rightY.text = "Y: $rightY"
+                } else {
+                    binding.rightJoystick.visibility = View.VISIBLE
+                    binding.rightJoystick.resetButtonPosition()
+                    binding.rightDpad.visibility = View.GONE
+                }
+            }
+        }
+    }
+
+    private fun dpadListener(direction: DPadView.Direction, action: Int, side: String){
+        when (side){
+            "left" -> {
+                if (action == MotionEvent.ACTION_DOWN){
+                    when(direction){
+                        DPadView.Direction.UP -> {leftX = 0; leftY = 100}
+                        DPadView.Direction.DOWN -> {leftX = 0; leftY = -100}
+                        DPadView.Direction.LEFT -> {leftX = -100; leftY = 0}
+                        DPadView.Direction.RIGHT -> {leftX = 100; leftY = 0}
+                        else -> {}
+                    }
+                    // Обновляем UI
+                    binding.leftX.text = "X: $leftX"
+                    binding.leftY.text = "Y: $leftY"
+                } else if (action == MotionEvent.ACTION_UP){
+                    leftX = 0
+                    leftY = 0
+                    // Обновляем UI
+                    binding.leftX.text = "X: $leftX"
+                    binding.leftY.text = "Y: $leftY"
+                }
+            }
+
+            "right" -> {
+                if (action == MotionEvent.ACTION_DOWN){
+                    when(direction){
+                        DPadView.Direction.UP -> {rightX = 0; rightY = 100}
+                        DPadView.Direction.DOWN -> {rightX = 0; rightY = -100}
+                        DPadView.Direction.LEFT -> {rightX = -100; rightY = 0}
+                        DPadView.Direction.RIGHT -> {rightX = 100; rightY = 0}
+                        else -> {}
+                    }
+                    // Обновляем UI
+                    binding.rightX.text = "X: $rightX"
+                    binding.rightY.text = "Y: $rightY"
+                } else if (action == MotionEvent.ACTION_UP){
+                    rightX = 0
+                    rightY = 0
+                    // Обновляем UI
+                    binding.rightX.text = "X: $rightX"
+                    binding.rightY.text = "Y: $rightY"
+                }
+            }
+        }
+    }
+
+    /** Обработка взаимодействий с джойстиком */
+    private fun joystickListener(angle: Int, strength: Int, side: String){
+        when(side){
+            "left" -> {
+                val xy = getJoystickXYCoordinate(angle, strength)
+                leftX = xy.first.toInt()
+                leftY = xy.second.toInt()
+
+                // Обновляем UI
+                binding.leftX.text = "X: $leftX"
+                binding.leftY.text = "Y: $leftY"
+            }
+
+            "right" -> {
+                val xy = getJoystickXYCoordinate(angle, strength)
+                rightX = xy.first.toInt()
+                rightY = xy.second.toInt()
+
+                // Обновляем UI
+                binding.rightX.text = "X: $rightX"
+                binding.rightY.text = "Y: $rightY"
+            }
+        }
+
+    }
+
 
     /** Получить координаты джойстика */
     fun getJoystickXYCoordinate(angle: Int, strength: Int): Pair<Double, Double>{
@@ -159,7 +287,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener {
         }
     }
 
-    /** Поток для отправоления данных: координаты XY с двух джойстиков , показания гироскопа XYZ) */
+    /** Поток для отправоления данных: координаты XY с двух джойстиков */
     private val task = Runnable {
         Log.d("MyLog", "Start send thread")
         while (!Thread.interrupted()) {
@@ -173,6 +301,5 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener {
             }
         }
     }
-
 
 }
