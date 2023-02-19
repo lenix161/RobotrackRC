@@ -58,7 +58,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintHorizontal_bias="0.1">
+        app:layout_constraintHorizontal_bias="0.05">
         <com.example.robotrackrc.customview.JoystickView
             android:id="@+id/left_joystick"
             android:layout_width="match_parent"
@@ -98,7 +98,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintHorizontal_bias="0.9">
+        app:layout_constraintHorizontal_bias="0.95">
 
         <com.example.robotrackrc.customview.JoystickView
             android:id="@+id/right_joystick"
@@ -112,7 +112,6 @@
             app:JV_fixedCenter="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.9"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -168,6 +167,53 @@
         app:layout_constraintEnd_toEndOf="@+id/left_X"
         app:layout_constraintStart_toStartOf="@+id/left_X"
         app:layout_constraintTop_toBottomOf="@+id/left_X" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/center_container"
+        android:background="@color/light_grey"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/right_joystick_container"
+        app:layout_constraintStart_toEndOf="@+id/left_joystick_container"
+        app:layout_constraintTop_toTopOf="parent" >
+
+        <TextView
+            android:id="@+id/ax"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AX:"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/ay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AY:"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/ax" />
+        <TextView
+            android:id="@+id/az"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AZ:"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/ay" />
+
+        <VideoView
+            android:id="@+id/video"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/az" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/switch_left_controller_type"

@@ -4,10 +4,17 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.widget.MediaController
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,7 +26,7 @@ import com.example.robotrackrc.databinding.ActivityMainBinding
 import com.example.robotrackrc.threads.ConnectThread
 
 
-class MainActivity : AppCompatActivity(), ConnectThread.Listener {
+class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventListener {
     private lateinit var binding: ActivityMainBinding
     private lateinit var btAdapter: BluetoothAdapter
     private lateinit var launcherBtSettingsActivity: ActivityResultLauncher<Intent>
@@ -29,11 +36,28 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener {
     private var leftY = 0
     private var rightX = 0
     private var rightY = 0
+    private var ax = 0.0f
+    private var ay = 0.0f
+    private var az = 0.0f
+    private lateinit var sensorManager: SensorManager
+    private lateinit var sensor: Sensor
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+//        val uri = "http://techslides.com/demos/sample-videos/small.mp4"
+//        binding.video.setVideoURI(uri)
+//        binding.video.setMediaController(MediaController(this))
+//        binding.video.requestFocus()
+//        binding.video.start()
+
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+
+
 
         /** Инициализация bluetooth adapter */
         val btManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -104,6 +128,16 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener {
         /** Запуск потока для отправки данных по bluetooth */
         val thread = Thread(task, "BtSendThread")
         thread.start()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        sensorManager.unregisterListener(this)
     }
 
     /** Обработка взаимодействий с переключателем */
@@ -300,6 +334,38 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener {
                 }
             }
         }
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        val rotationMatrix = FloatArray(16)
+        if (event != null) {
+            SensorManager.getRotationMatrixFromVector(rotationMatrix,event.values)
+        }
+
+        val remappedRotationMatrix = FloatArray(16)
+        SensorManager.remapCoordinateSystem(rotationMatrix,
+            SensorManager.AXIS_X,
+            SensorManager.AXIS_Z,
+            remappedRotationMatrix)
+
+        val orientation = FloatArray(3)
+        SensorManager.getOrientation(remappedRotationMatrix, orientation)
+
+        for ( i in orientation.indices){
+            orientation[i] = Math.toDegrees(orientation[i].toDouble()).toFloat()
+        }
+
+        ax = orientation[0]
+        ay = orientation[1]
+        az = orientation[2]
+
+        binding.ax.text = "AX: ${ax.toInt()}"
+        binding.ay.text = "AY: ${ay.toInt()}"
+        binding.az.text = "AZ: ${az.toInt()}"
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+
     }
 
 }
