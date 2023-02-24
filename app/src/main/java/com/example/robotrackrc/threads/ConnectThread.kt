@@ -44,7 +44,7 @@ class ConnectThread(device: BluetoothDevice, private val listener: Listener): Th
     }
 
 
-    private fun closeSocket(){
+    fun closeSocket(){
         try {
             socket.close()
             isConnected = false

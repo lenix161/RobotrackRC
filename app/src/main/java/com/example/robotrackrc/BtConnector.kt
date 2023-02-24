@@ -19,4 +19,9 @@ class BtConnector(private val adapter: BluetoothAdapter, private val listener: C
     fun sendMessage(list:List<Int>){
         connectThread.sendReceiveThread.sedMessage(list)
     }
+
+    fun disconnect(){
+        connectThread.closeSocket()
+        connectThread.interrupt()
+    }
 }

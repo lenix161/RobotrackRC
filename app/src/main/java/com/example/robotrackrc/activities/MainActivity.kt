@@ -8,16 +8,17 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import android.widget.MediaController
+import android.view.View.OnTouchListener
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.codertainment.dpadview.DPadView
 import com.example.robotrackrc.BtConnector
@@ -26,21 +27,39 @@ import com.example.robotrackrc.databinding.ActivityMainBinding
 import com.example.robotrackrc.threads.ConnectThread
 
 
-class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventListener {
+class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventListener, OnTouchListener {
     private lateinit var binding: ActivityMainBinding
     private lateinit var btAdapter: BluetoothAdapter
     private lateinit var launcherBtSettingsActivity: ActivityResultLauncher<Intent>
     private lateinit var launcherBtEnableActivity: ActivityResultLauncher<Intent>
     private lateinit var btConnector: BtConnector
+
+    // Датчик гироскопа
+    private lateinit var sensorManager: SensorManager
+    private lateinit var sensor: Sensor
+
+    // Положение левого и правого джойстиков
     private var leftX = 0
     private var leftY = 0
     private var rightX = 0
     private var rightY = 0
+
+    // Показания гироскопа
     private var ax = 0.0f
     private var ay = 0.0f
     private var az = 0.0f
-    private lateinit var sensorManager: SensorManager
-    private lateinit var sensor: Sensor
+
+    // Кнопки F1-F6
+    private var f1 = false
+    private var f2 = false
+    private var f3 = false
+    private var f4 = false
+    private var f5 = false
+    private var f6 = false
+
+    // Флаг того, что показания гироскопа переключены на вид с камеры
+    private var isCameraStarted = false
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,21 +67,37 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-//        val uri = "http://techslides.com/demos/sample-videos/small.mp4"
-//        binding.video.setVideoURI(uri)
-//        binding.video.setMediaController(MediaController(this))
-//        binding.video.requestFocus()
-//        binding.video.start()
+        val webView: WebView = binding.webView
+        webView.webViewClient = WebViewClient()
+        webView.loadUrl("https://www.youtube.com")
 
+        webView.settings.javaScriptEnabled = true
+
+        /** Инициализация обработчика нажатий кнопки переключения гироскоп - камера*/
+        binding.switchGyroAndCamButton.setOnClickListener { switchGyroAndCamButtonListener()}
+
+
+        /** Инициализация обработчика нажатий кнопок F1-F3 */
+        binding.f1Button.setOnTouchListener(this)
+        binding.f2Button.setOnTouchListener(this)
+        binding.f3Button.setOnTouchListener(this)
+
+        /** Инициализация обработчика нажатий кнопок F4-F6 */
+        binding.f4Button.setOnCheckedChangeListener { _, isChecked -> f4 = isChecked }
+        binding.f5Button.setOnCheckedChangeListener { _, isChecked -> f5 = isChecked }
+        binding.f6Button.setOnCheckedChangeListener { _, isChecked -> f6 = isChecked }
+
+
+        /** Инициализация менеджера  датчиков гироскопа */
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
-
 
 
         /** Инициализация bluetooth adapter */
         val btManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         btAdapter = btManager.adapter
 
+        /** Callback для  всплывающего окна включения BT*/
         registerBtEnableActivityLauncher()
 
         /** Всплывающее окно для включения bluetooth, если он выключен */
@@ -74,20 +109,45 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             }
         }
 
+
         initBtConnector()
+        /** Callback для BtSettingsActivity */
         registerBtSettingsActivityLauncher()
+
+
 
         /** Обработчик нажатий на кнопку bluetooth */
         binding.bluetoothButton.setOnClickListener {
-            if (!btAdapter.isEnabled){
-                Toast.makeText(this, "Включите bluetooth"
-                    , Toast.LENGTH_SHORT).show()
+            // Проверка на то, что подключение уже установлено
+            if(!ConnectThread.isConnected){
+                //Если подключение еще не установлено
+                if (!btAdapter.isEnabled){
+                    Toast.makeText(this, "Включите bluetooth"
+                        , Toast.LENGTH_SHORT).show()
+                } else {
+                    launcherBtSettingsActivity
+                        .launch(Intent(this, BluetoothSettingsActivity::class.java))
+                }
             } else {
-                launcherBtSettingsActivity
-                    .launch(Intent(this, BluetoothSettingsActivity::class.java))
+                // Если подключение уже установлено, появится диалоговое окно
+                //  для уточнения намерений пользователя
+                val builder = AlertDialog.Builder(this)
+                builder.setMessage("Отключиться?")
+                    .setPositiveButton("Да") { dialog, id ->
+                            btConnector.disconnect()
+                        }
+                    .setNegativeButton("Нет") { dialog, id ->
+                        // User cancelled the dialog
+                    }
+                // Create the AlertDialog object and return it
+                builder.create()
+                builder.show()
+
             }
+
         }
 
+        // Размеры внутреннего круга Dpad
         binding.leftDpad.centerCircleRatio = 4.0f
         binding.rightDpad.centerCircleRatio = 4.0f
 
@@ -98,6 +158,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             }
         }
 
+        /** Обработка взаимодействия с правым Dpad контроллером */
         binding.rightDpad.onDirectionPressListener = {direction, action ->
             if (direction != null) {
                 dpadListener(direction, action, "right")
@@ -106,12 +167,12 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
         /** Инициализация прослушивателя взаимодействий с левым переключателем */
         binding.switchLeftControllerType.setOnCheckedChangeListener { buttonView, isChecked ->
-            switchListener(isChecked, "left")
+            switchJoystickTypeListener(isChecked, "left")
         }
 
         /** Инициализация прослушивателя взаимодействий с правым переключателем */
         binding.switchRightControllerType.setOnCheckedChangeListener { buttonView, isChecked ->
-            switchListener(isChecked, "right")
+            switchJoystickTypeListener(isChecked, "right")
         }
 
         /** Инициализация прослушивателя взаимодействий с левым джойстиком */
@@ -132,16 +193,34 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
     override fun onResume() {
         super.onResume()
+        // Включение датчика гироскопа
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
     }
 
     override fun onPause() {
         super.onPause()
+        // Выключение датчика гироскопа
         sensorManager.unregisterListener(this)
     }
 
-    /** Обработка взаимодействий с переключателем */
-    private fun switchListener(isChecked:Boolean, side: String){
+
+    /** Обработка нажатий на кнопку переключения гироскоп - камера */
+    private fun switchGyroAndCamButtonListener(){
+        if (!isCameraStarted){
+            isCameraStarted = true
+            binding.coordinatesContainer.visibility = View.GONE
+            binding.webView.visibility = View.VISIBLE
+            binding.switchGyroAndCamButton.setImageDrawable(resources.getDrawable(R.drawable.cam_to_gyro_btn))
+        } else {
+            isCameraStarted = false
+            binding.webView.visibility = View.GONE
+            binding.coordinatesContainer.visibility = View.VISIBLE
+            binding.switchGyroAndCamButton.setImageDrawable(resources.getDrawable(R.drawable.gyro_to_cam_btn))
+        }
+    }
+
+    /** Обработка взаимодействий с переключателем типов джойстика */
+    private fun switchJoystickTypeListener(isChecked:Boolean, side: String){
         when(side){
             "left" -> {
                 if (isChecked){
@@ -176,7 +255,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             }
         }
     }
-
+    /** Обработка взаимодействий с Dpad */
     private fun dpadListener(direction: DPadView.Direction, action: Int, side: String){
         when (side){
             "left" -> {
@@ -321,21 +400,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         }
     }
 
-    /** Поток для отправоления данных: координаты XY с двух джойстиков */
-    private val task = Runnable {
-        Log.d("MyLog", "Start send thread")
-        while (!Thread.interrupted()) {
-            if (ConnectThread.isConnected) {
-                btConnector.sendMessage(listOf(leftX, leftY, rightX, rightY))
-                try {
-                    Thread.sleep(100)
-                } catch (e: InterruptedException) {
-                    break
-                }
-            }
-        }
-    }
-
+    /** Снятие показаний с гироскопа */
     override fun onSensorChanged(event: SensorEvent?) {
         val rotationMatrix = FloatArray(16)
         if (event != null) {
@@ -364,8 +429,69 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         binding.az.text = "AZ: ${az.toInt()}"
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
+    /** Обработчик нажатий для кнопок F1-F3 */
+    override fun onTouch(view: View?, event: MotionEvent?): Boolean {
+        when (view) {
+            binding.f1Button -> {
+                if (event != null) {
+                    when (event.action){
+                        MotionEvent.ACTION_DOWN -> {
+                            f1 = true
+                        }
+                        MotionEvent.ACTION_UP -> {
+                            view.performClick()
+                            f1 = false
+                        }
+                    }
+                }
+            }
+
+            binding.f2Button -> {
+                if (event != null) {
+                    when (event.action){
+                        MotionEvent.ACTION_DOWN -> {
+                            f2 = true
+                        }
+                        MotionEvent.ACTION_UP -> {
+                            view.performClick()
+                            f2 = false
+                        }
+                    }
+                }
+            }
+
+            binding.f3Button -> {
+                if (event != null) {
+                    when (event.action){
+                        MotionEvent.ACTION_DOWN -> {
+                            f3 = true
+                        }
+                        MotionEvent.ACTION_UP -> {
+                            view.performClick()
+                            f3 = false
+                        }
+                    }
+                }
+            }
+        }
+        return false
+    }
+
+    /** Поток для отправоления данных: координаты XY с двух джойстиков */
+    private val task = Runnable {
+        Log.d("MyLog", "Start send thread")
+        while (!Thread.interrupted()) {
+            if (ConnectThread.isConnected) {
+                btConnector.sendMessage(listOf(leftX, leftY, rightX, rightY))
+                try {
+                    Thread.sleep(100)
+                } catch (e: InterruptedException) {
+                    break
+                }
+            }
+        }
     }
 
 }
