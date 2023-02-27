@@ -2,7 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <!--  Только для устройств с bluetooth адаптером  -->
+    <uses-feature android:name="android.hardware.bluetooth" android:required="true" />
+
+    <uses-permission android:name="android.permission.BLUETOOTH"
+                     android:maxSdkVersion="30"/>
+
+    <!--  Для взаимодействия с уже сопряженными устройствами  -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
     <uses-permission android:name="android.permission.INTERNET"/>
 

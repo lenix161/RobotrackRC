@@ -1,13 +1,16 @@
 package com.example.robotrackrc.activities
 
+import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
@@ -49,6 +52,10 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
     private var ay = 0.0f
     private var az = 0.0f
 
+    private var offsetax = 0.0f
+    private var offsetay = 0.0f
+    private var offsetaz = 0.0f
+
     // Кнопки F1-F6
     private var f1 = false
     private var f2 = false
@@ -59,8 +66,6 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
     // Флаг того, что показания гироскопа переключены на вид с камеры
     private var isCameraStarted = false
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,7 +78,14 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
         webView.settings.javaScriptEnabled = true
 
-        /** Инициализация обработчика нажатий кнопки переключения гироскоп - камера*/
+        binding.resetGyroPositionButton.setOnClickListener {
+            offsetax += ax
+            offsetay += ay
+            offsetaz += az
+            Log.d("MyLog", "ax: $offsetax, ay: $offsetay, az: $offsetaz")
+        }
+
+        /** Инициализация обработчика нажатий кнопки переключения гироскоп - камера */
         binding.switchGyroAndCamButton.setOnClickListener { switchGyroAndCamButtonListener()}
 
 
@@ -97,17 +109,28 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         val btManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         btAdapter = btManager.adapter
 
+
+
         /** Callback для  всплывающего окна включения BT*/
         registerBtEnableActivityLauncher()
 
-        /** Всплывающее окно для включения bluetooth, если он выключен */
-        if (!btAdapter.isEnabled){
-            try {
-                launcherBtEnableActivity.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
-            } catch (e: SecurityException){
-                Toast.makeText(this, "Ошибка включения bluetooth", Toast.LENGTH_SHORT).show()
+        /** Всплывающее окно для запроса разрешений и включения bluetooth, если он выключен */
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            requestMultiplePermissions.launch(arrayOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT))
+        }
+        else{
+            if (!btAdapter.isEnabled){
+                try {
+                    val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                    launcherBtEnableActivity.launch(Intent(enableBtIntent))
+                } catch (e: SecurityException){
+                    Toast.makeText(this, "Ошибка включения bluetooth", Toast.LENGTH_SHORT).show()
+                }
             }
         }
+
 
 
         initBtConnector()
@@ -118,33 +141,42 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
         /** Обработчик нажатий на кнопку bluetooth */
         binding.bluetoothButton.setOnClickListener {
-            // Проверка на то, что подключение уже установлено
-            if(!ConnectThread.isConnected){
-                //Если подключение еще не установлено
-                if (!btAdapter.isEnabled){
-                    Toast.makeText(this, "Включите bluetooth"
-                        , Toast.LENGTH_SHORT).show()
-                } else {
-                    launcherBtSettingsActivity
-                        .launch(Intent(this, BluetoothSettingsActivity::class.java))
-                }
+            if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED){
+                requestMultiplePermissions.launch(arrayOf(
+                    Manifest.permission.BLUETOOTH_CONNECT))
+            }
+            else if (!btAdapter.isEnabled){
+                // Включить  bluetooth, если он выключен
+                val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                launcherBtEnableActivity.launch(enableBtIntent)
             } else {
-                // Если подключение уже установлено, появится диалоговое окно
-                //  для уточнения намерений пользователя
-                val builder = AlertDialog.Builder(this)
-                builder.setMessage("Отключиться?")
-                    .setPositiveButton("Да") { dialog, id ->
+                // Проверка на то, что подключение уже установлено
+                if(!ConnectThread.isConnected){
+                    //Если подключение еще не установлено
+                    if (!btAdapter.isEnabled){
+                        Toast.makeText(this, "Включите bluetooth"
+                            , Toast.LENGTH_SHORT).show()
+                    } else {
+                        launcherBtSettingsActivity
+                            .launch(Intent(this, BluetoothSettingsActivity::class.java))
+                    }
+                } else {
+                    // Если подключение уже установлено, появится диалоговое окно
+                    //  для уточнения намерений пользователя
+                    val builder = AlertDialog.Builder(this)
+                    builder.setMessage("Отключиться?")
+                        .setPositiveButton("Да") { dialog, id ->
                             btConnector.disconnect()
                         }
-                    .setNegativeButton("Нет") { dialog, id ->
-                        // User cancelled the dialog
-                    }
-                // Create the AlertDialog object and return it
-                builder.create()
-                builder.show()
+                        .setNegativeButton("Нет") { dialog, id ->
+                            // User cancelled the dialog
+                        }
+                    // Create the AlertDialog object and return it
+                    builder.create()
+                    builder.show()
 
+                }
             }
-
         }
 
         // Размеры внутреннего круга Dpad
@@ -166,12 +198,12 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         }
 
         /** Инициализация прослушивателя взаимодействий с левым переключателем */
-        binding.switchLeftControllerType.setOnCheckedChangeListener { buttonView, isChecked ->
+        binding.switchLeftControllerType.setOnCheckedChangeListener { _, isChecked ->
             switchJoystickTypeListener(isChecked, "left")
         }
 
         /** Инициализация прослушивателя взаимодействий с правым переключателем */
-        binding.switchRightControllerType.setOnCheckedChangeListener { buttonView, isChecked ->
+        binding.switchRightControllerType.setOnCheckedChangeListener { _, isChecked ->
             switchJoystickTypeListener(isChecked, "right")
         }
 
@@ -194,7 +226,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
     override fun onResume() {
         super.onResume()
         // Включение датчика гироскопа
-        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST)
     }
 
     override fun onPause() {
@@ -202,6 +234,18 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         // Выключение датчика гироскопа
         sensorManager.unregisterListener(this)
     }
+
+
+    private val requestMultiplePermissions =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            permissions.entries.forEach {
+                if (it.key == "android.permission.BLUETOOTH_CONNECT" && !it.value){
+                    Toast.makeText(this, "Необходимо выдать разрешение для работы приложения",
+                        Toast.LENGTH_SHORT).show()
+                }
+                Log.d("test006", "${it.key} = ${it.value}")
+            }
+        }
 
 
     /** Обработка нажатий на кнопку переключения гироскоп - камера */
@@ -358,6 +402,9 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
             if (it.resultCode == RESULT_OK){
                 binding.bluetoothButton.setColorFilter(resources.getColor(R.color.blue))
+            }else{
+                Toast.makeText(this, "Необходимо включить bluetooth для работы приложения",
+                    Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -420,9 +467,11 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             orientation[i] = Math.toDegrees(orientation[i].toDouble()).toFloat()
         }
 
-        ax = orientation[0]
-        ay = orientation[1]
-        az = orientation[2]
+
+        ax = (orientation[0] - offsetax) % 180.0f
+        ay = (orientation[1] - offsetay) % 180.0f
+        az = (orientation[2] - offsetaz) % 180.0f
+
 
         binding.ax.text = "AX: ${ax.toInt()}"
         binding.ay.text = "AY: ${ay.toInt()}"
