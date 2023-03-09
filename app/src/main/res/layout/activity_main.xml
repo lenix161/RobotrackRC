@@ -88,6 +88,7 @@
             app:normalColor="@color/orange"
             app:pressedColor="@color/red"
             android:src="@drawable/ic_gamepad_black"/>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -115,32 +116,109 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-            <com.codertainment.dpadview.DPadView
-                android:visibility="gone"
-                android:id="@+id/right_dpad"
-                android:layout_width="180dp"
-                android:layout_height="180dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:centerCirclePressEnabled="false"
-                app:centerCircleNormalColor="@color/light_grey"
-                app:normalColor="@color/orange"
-                app:pressedColor="@color/red"
-                android:src="@drawable/ic_gamepad_black"/>
-<!--        <androidx.appcompat.widget.AppCompatSeekBar-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:rotation="270"-->
-<!--            android:min="0"-->
-<!--            android:max="180"-->
-<!--            app:layout_constraintBottom_toBottomOf="parent"-->
-<!--            app:layout_constraintEnd_toEndOf="parent"-->
-<!--            app:layout_constraintStart_toStartOf="parent"-->
-<!--            app:layout_constraintTop_toTopOf="parent" />-->
+        <com.codertainment.dpadview.DPadView
+            android:visibility="gone"
+            android:id="@+id/right_dpad"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:centerCirclePressEnabled="false"
+            app:centerCircleNormalColor="@color/light_grey"
+            app:normalColor="@color/orange"
+            app:pressedColor="@color/red"
+            android:src="@drawable/ic_gamepad_black"/>
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
+        <com.lukelorusso.verticalseekbar.VerticalSeekBar
+            android:visibility="invisible"
+            android:id="@+id/left_seek_bar"
+            android:layout_width="35dp"
+            android:layout_height="150dp"
+            app:vsb_bar_corner_radius="7dp"
+            app:vsb_max_value="180"
+            app:vsb_progress="0"
+            app:vsb_use_thumb_to_set_progress="true"
+            app:vsb_click_to_set_progress="false"
+            app:vsb_thumb_container_tint="@color/orange"
+            app:vsb_thumb_placeholder_src="@drawable/baseline_blur_on_24"
+            app:vsb_thumb_container_corner_radius="15dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:visibility="invisible"
+            android:id="@+id/left_seek_bar_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            app:layout_constraintBottom_toTopOf="@+id/left_seek_bar"
+            app:layout_constraintEnd_toEndOf="@+id/left_seek_bar"
+            app:layout_constraintStart_toStartOf="@+id/left_seek_bar"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.lukelorusso.verticalseekbar.VerticalSeekBar
+            android:visibility="invisible"
+            android:id="@+id/middle_seek_bar"
+            android:layout_width="35dp"
+            android:layout_height="150dp"
+            app:vsb_bar_corner_radius="7dp"
+            app:vsb_max_value="180"
+            app:vsb_progress="0"
+            app:vsb_thumb_container_tint="@color/orange"
+            app:vsb_thumb_placeholder_src="@drawable/baseline_blur_on_24"
+            app:vsb_thumb_container_corner_radius="15dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:visibility="invisible"
+            android:id="@+id/middle_seek_bar_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            app:layout_constraintBottom_toTopOf="@+id/middle_seek_bar"
+            app:layout_constraintEnd_toEndOf="@+id/middle_seek_bar"
+            app:layout_constraintStart_toStartOf="@+id/middle_seek_bar"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.lukelorusso.verticalseekbar.VerticalSeekBar
+            android:visibility="invisible"
+            android:id="@+id/right_seek_bar"
+            android:layout_width="35dp"
+            android:layout_height="150dp"
+            app:vsb_bar_corner_radius="7dp"
+            app:vsb_max_value="180"
+            app:vsb_progress="0"
+            app:vsb_thumb_container_tint="@color/orange"
+            app:vsb_thumb_placeholder_src="@drawable/baseline_blur_on_24"
+            app:vsb_thumb_container_corner_radius="15dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.9"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:visibility="invisible"
+            android:id="@+id/right_seek_bar_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            app:layout_constraintBottom_toTopOf="@+id/right_seek_bar"
+            app:layout_constraintEnd_toEndOf="@+id/right_seek_bar"
+            app:layout_constraintStart_toStartOf="@+id/right_seek_bar"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
             <TextView
                 android:id="@+id/left_X"
@@ -347,4 +425,15 @@
                 app:layout_constraintStart_toStartOf="@+id/f3_button"
                 app:layout_constraintTop_toBottomOf="@+id/f3_button" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+    <ImageButton
+        android:id="@+id/seek_bar_enable_button"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:backgroundTint="@color/white"
+        android:scaleType="fitCenter"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/right_joystick_container"
+        app:layout_constraintStart_toStartOf="@+id/right_joystick_container"
+        app:srcCompat="@drawable/seekbar_btn" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

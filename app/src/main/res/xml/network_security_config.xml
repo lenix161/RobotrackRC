@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
     <base-config cleartextTrafficPermitted = "true">
+        <allow-navigation href="*" />
         <trust-anchors>
             <certificates src = "system"/>
         </trust-anchors>

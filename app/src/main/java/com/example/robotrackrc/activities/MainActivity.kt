@@ -23,11 +23,13 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.codertainment.dpadview.DPadView
 import com.example.robotrackrc.BtConnector
 import com.example.robotrackrc.R
 import com.example.robotrackrc.databinding.ActivityMainBinding
 import com.example.robotrackrc.threads.ConnectThread
+import com.lukelorusso.verticalseekbar.VerticalSeekBar
 
 
 class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventListener, OnTouchListener {
@@ -47,7 +49,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
     private var rightX = 0
     private var rightY = 0
 
-    // Показания гироскопа
+    // Значения гироскопа
     private var ax = 0.0f
     private var ay = 0.0f
     private var az = 0.0f
@@ -64,25 +66,58 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
     private var f5 = false
     private var f6 = false
 
+    // Значения ползунков(seek bar)
+    private var pot1 = 0
+    private var pot2 = 0
+    private var pot3 = 0
+
     // Флаг того, что показания гироскопа переключены на вид с камеры
     private var isCameraStarted = false
+    private var isSeekBarEnable = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        /** Подключение изображения с камеры */
         val webView: WebView = binding.webView
         webView.webViewClient = WebViewClient()
-        webView.loadUrl("https://www.youtube.com")
-
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        webView.loadUrl("http://192.168.1.57:8888/stream")
         webView.settings.javaScriptEnabled = true
 
+        /** Кнопка обнуления гироскопа */
         binding.resetGyroPositionButton.setOnClickListener {
             offsetax += ax
             offsetay += ay
             offsetaz += az
             Log.d("MyLog", "ax: $offsetax, ay: $offsetay, az: $offsetaz")
+
+            //TODO:Корректное обнуление, значения должны быть от -180 до 180
+        }
+
+        /** Взаимодействие с левым seek bar */
+        binding.leftSeekBar.setOnProgressChangeListener { progressValue ->
+            pot1 = progressValue
+            binding.leftSeekBarValue.text = "$pot1"
+        }
+
+        /** Взаимодействие со средним seek bar */
+        binding.middleSeekBar.setOnProgressChangeListener { progressValue ->
+            pot2 = progressValue
+            binding.middleSeekBarValue.text = "$pot2"
+        }
+
+        /** Взаимодействие с правым seek bar */
+        binding.rightSeekBar.setOnProgressChangeListener { progressValue ->
+            pot3 = progressValue
+            binding.rightSeekBarValue.text = "$pot3"
+        }
+
+        /** Включение/выключение seek bar(-ов) */
+        binding.seekBarEnableButton.setOnClickListener {
+            enableSeekBarListener()
         }
 
         /** Инициализация обработчика нажатий кнопки переключения гироскоп - камера */
@@ -141,7 +176,9 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
         /** Обработчик нажатий на кнопку bluetooth */
         binding.bluetoothButton.setOnClickListener {
-            if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                != PackageManager.PERMISSION_GRANTED){
                 requestMultiplePermissions.launch(arrayOf(
                     Manifest.permission.BLUETOOTH_CONNECT))
             }
@@ -208,7 +245,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         }
 
         /** Инициализация прослушивателя взаимодействий с левым джойстиком */
-        binding.leftJoystick.isAutoReCenterButton = false
+        binding.leftJoystick.isAutoReCenterButton = true
         binding.leftJoystick.setOnMoveListener { angle, strength ->
             joystickListener(angle,strength, "left")
         }
@@ -217,6 +254,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         binding.rightJoystick.setOnMoveListener { angle, strength ->
             joystickListener(angle,strength, "right")
         }
+        binding.rightJoystick.isAutoReCenterButton = false
 
         /** Запуск потока для отправки данных по bluetooth */
         val thread = Thread(task, "BtSendThread")
@@ -235,7 +273,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         sensorManager.unregisterListener(this)
     }
 
-
+    /*** Явный запрос прав на bluetoocth подключение */
     private val requestMultiplePermissions =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             permissions.entries.forEach {
@@ -247,8 +285,62 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             }
         }
 
+    /** Обработка нажатий на кнопку включения/выключения seek bar(-ов) */
+    private fun enableSeekBarListener(){
+        if (!isSeekBarEnable){
+            isSeekBarEnable = true
 
-    /** Обработка нажатий на кнопку переключения гироскоп - камера */
+            // Перекрашиваем кнопку
+            binding.seekBarEnableButton.setColorFilter(resources.getColor(R.color.orange))
+
+            // Скрываем ненужные View
+            binding.rightDpad.visibility = View.GONE
+            binding.rightJoystick.visibility = View.GONE
+            binding.switchRightControllerType.visibility = View.GONE
+            binding.rightX.visibility = View.GONE
+            binding.rightY.visibility = View.GONE
+
+            // Переводим правый switch в выключенное состояние
+            binding.switchRightControllerType.setOnCheckedChangeListener(null)
+            binding.switchRightControllerType.isChecked = false
+            binding.switchRightControllerType.setOnCheckedChangeListener { _, isChecked ->
+                switchJoystickTypeListener(isChecked, "right")
+            }
+
+            // Делаем три seek bar(-а) видимыми
+            binding.leftSeekBar.visibility = View.VISIBLE
+            binding.middleSeekBar.visibility = View.VISIBLE
+            binding.rightSeekBar.visibility = View.VISIBLE
+            binding.leftSeekBarValue.visibility = View.VISIBLE
+            binding.middleSeekBarValue.visibility = View.VISIBLE
+            binding.rightSeekBarValue.visibility = View.VISIBLE
+        } else {
+            isSeekBarEnable = false
+
+            // Перекрашиваем кнопку
+            binding.seekBarEnableButton.setColorFilter(resources.getColor(R.color.black))
+
+            // Скрываем три seek bar(-а)
+            binding.leftSeekBar.visibility = View.INVISIBLE
+            binding.middleSeekBar.visibility = View.INVISIBLE
+            binding.rightSeekBar.visibility = View.INVISIBLE
+            binding.leftSeekBarValue.visibility = View.INVISIBLE
+            binding.middleSeekBarValue.visibility = View.INVISIBLE
+            binding.rightSeekBarValue.visibility = View.INVISIBLE
+
+            binding.leftSeekBar.progress = 0
+            binding.middleSeekBar.progress = 0
+            binding.rightSeekBar.progress = 0
+
+            // Делаем видимыми ранее скрытые View
+            binding.rightJoystick.visibility = View.VISIBLE
+            binding.switchRightControllerType.visibility = View.VISIBLE
+            binding.rightX.visibility = View.VISIBLE
+            binding.rightY.visibility = View.VISIBLE
+        }
+    }
+
+    /** Обработка нажатий на кнопку переключения гироскоп <--> камера */
     private fun switchGyroAndCamButtonListener(){
         if (!isCameraStarted){
             isCameraStarted = true
@@ -456,7 +548,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
         val remappedRotationMatrix = FloatArray(16)
         SensorManager.remapCoordinateSystem(rotationMatrix,
-            SensorManager.AXIS_X,
+            SensorManager.AXIS_MINUS_X,
             SensorManager.AXIS_Z,
             remappedRotationMatrix)
 

@@ -26,7 +26,7 @@ class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectTh
     }
 
     override fun run() {
-        val buf = ByteArray(1)
+        val buf = ByteArray(4)
         while (true){
             try {
                 val size = inputStream.read(buf)
@@ -41,10 +41,10 @@ class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectTh
     }
 
     /** Запись сообщения в output stream ввиде набора байтиов */
-    fun sedMessage(list: List<Int>){
+    fun sendMessage(list: List<Int>){
 
         try {
-            outputStream.write(byteArrayOf(list[0].toByte(), 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00))
+            outputStream.write(byteArrayOf(list[0].toByte(), list[1].toByte(), list[2].toByte(), list[3].toByte(), 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00))
             Log.d("MyLog", "Outputstream: ${list[0]}, ${list[1]}, ${list[2]}, ${list[3]}")
         } catch(e: IOException){
             Log.e("MyLog", "Ошибка записи в output stream")
