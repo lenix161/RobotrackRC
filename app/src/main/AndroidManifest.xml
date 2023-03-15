@@ -34,8 +34,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".activities.BluetoothSettingsActivity"
+            android:exported="true"
+            android:screenOrientation="sensorLandscape"/>
+
+        <activity
+            android:name=".activities.AppSettingsActivity"
             android:exported="true"
             android:screenOrientation="sensorLandscape"/>
     </application>

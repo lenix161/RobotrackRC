@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -16,6 +17,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
+import android.view.WindowManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -23,13 +25,11 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import com.codertainment.dpadview.DPadView
 import com.example.robotrackrc.BtConnector
 import com.example.robotrackrc.R
 import com.example.robotrackrc.databinding.ActivityMainBinding
 import com.example.robotrackrc.threads.ConnectThread
-import com.lukelorusso.verticalseekbar.VerticalSeekBar
 
 
 class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventListener, OnTouchListener {
@@ -75,10 +75,21 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
     private var isCameraStarted = false
     private var isSeekBarEnable = false
 
+    // Поток для сбора и отправки данных по bluetooth
+    private lateinit var collectDataThread: Thread
+
+    // Настройки приложения
+    private lateinit var appSettings: SharedPreferences
+    private lateinit var editor: SharedPreferences.Editor
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        /** Инициализация Shared Preferences */
+        appSettings = getSharedPreferences("Settings", MODE_PRIVATE)
+        editor = appSettings.edit()
 
         /** Подключение изображения с камеры */
         val webView: WebView = binding.webView
@@ -216,6 +227,14 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             }
         }
 
+
+        /** Обработчик нажатий на кнопку настроек */
+        binding.settingsButton.setOnClickListener {
+            startActivity(Intent(this, AppSettingsActivity::class.java))
+            overridePendingTransition(0,0)
+        }
+
+
         // Размеры внутреннего круга Dpad
         binding.leftDpad.centerCircleRatio = 4.0f
         binding.rightDpad.centerCircleRatio = 4.0f
@@ -245,32 +264,86 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         }
 
         /** Инициализация прослушивателя взаимодействий с левым джойстиком */
-        binding.leftJoystick.isAutoReCenterButton = true
         binding.leftJoystick.setOnMoveListener { angle, strength ->
             joystickListener(angle,strength, "left")
+        }
+        if (appSettings.contains("leftAutoRecenter")){
+            val a = appSettings.getBoolean("leftAutoRecenter", true)
+            binding.leftJoystick.isAutoReCenterButton = a
+            Log.d("MyLog", "left $a read")
         }
 
         /** Инициализация прослушивателя взаимодействий с правым джойстиком */
         binding.rightJoystick.setOnMoveListener { angle, strength ->
             joystickListener(angle,strength, "right")
         }
-        binding.rightJoystick.isAutoReCenterButton = false
+        if (appSettings.contains("rightAutoRecenter")){
+            val a = appSettings.getBoolean("rightAutoRecenter", true)
+            binding.rightJoystick.isAutoReCenterButton = a
+            Log.d("MyLog", "right $a read")
+        }
 
         /** Запуск потока для отправки данных по bluetooth */
-        val thread = Thread(task, "BtSendThread")
-        thread.start()
+        collectDataThread = Thread(task, "BtSendThread")
+        collectDataThread.start()
     }
 
     override fun onResume() {
         super.onResume()
         // Включение датчика гироскопа
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST)
+
+        // Чтение настроек для девого джойстика
+        if (appSettings.contains("leftAutoRecenter")){
+            val flag = appSettings.getBoolean("leftAutoRecenter", true)
+            if (flag) binding.leftJoystick.resetButtonPosition()
+            binding.leftJoystick.isAutoReCenterButton = flag
+        }
+
+        // Чтение настроек для правого джойстика
+        if (appSettings.contains("rightAutoRecenter")){
+            val flag = appSettings.getBoolean("rightAutoRecenter", true)
+            if (flag) binding.rightJoystick.resetButtonPosition()
+            binding.rightJoystick.isAutoReCenterButton = flag
+        }
+
+        // Чтение настроек на автоматическое подключение к последнему устройству и подключение к нему
+        if (appSettings.contains("autoConnectToLastDevice") && appSettings.contains("lastDeviceName")
+            && appSettings.contains("lastDeviceMac")){
+            val flag = appSettings.getBoolean("autoConnectToLastDevice", false)
+            val lastDeviceName = appSettings.getString("lastDeviceName", "")
+            val lastDeviceMac = appSettings.getString("lastDeviceMac", "")
+            if (flag){
+                btConnector.connect(lastDeviceMac.toString())
+
+                // Обновляем UI
+                binding.connectedDeviceName.text = lastDeviceName
+                binding.connectedDeviceName.setTextColor(resources.getColor(R.color.green))
+                binding.bluetoothButton.setColorFilter(resources.getColor(R.color.blue))
+                binding.connectionStatus.text = lastDeviceMac
+            }
+        }
+
+        // Чтение настроек: не отключать подсветку экрана
+        if (appSettings.contains("keepScreenOn")){
+            Log.d("MyLog", "keep screen on - ${appSettings.getBoolean("keepScreenOn", false)}")
+            if (appSettings.getBoolean("keepScreenOn", false)){
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+        }
+
     }
 
     override fun onPause() {
         super.onPause()
         // Выключение датчика гироскопа
         sensorManager.unregisterListener(this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Остановка потока собирающего данные для отправки по bluetooth
+        collectDataThread.interrupt()
     }
 
     /*** Явный запрос прав на bluetoocth подключение */
@@ -281,7 +354,6 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                     Toast.makeText(this, "Необходимо выдать разрешение для работы приложения",
                         Toast.LENGTH_SHORT).show()
                 }
-                Log.d("test006", "${it.key} = ${it.value}")
             }
         }
 
@@ -516,6 +588,12 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                 binding.connectedDeviceName.setTextColor(resources.getColor(R.color.green))
                 binding.bluetoothButton.setColorFilter(resources.getColor(R.color.blue))
                 binding.connectionStatus.text = deviceMac
+
+                // Запоминаем последнее подключенное устройство
+                editor.putString("lastDeviceName", deviceName)
+                editor.putString("lastDeviceMac", deviceMac)
+                editor.apply()
+                Log.d("MyLog", "Устройство $deviceName $deviceMac записано")
             }
         }
     }
@@ -622,10 +700,11 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
     /** Поток для отправоления данных: координаты XY с двух джойстиков */
     private val task = Runnable {
-        Log.d("MyLog", "Start send thread")
         while (!Thread.interrupted()) {
             if (ConnectThread.isConnected) {
-                btConnector.sendMessage(listOf(leftX, leftY, rightX, rightY))
+                btConnector.sendMessage(listOf(leftX, leftY, rightX, rightY,
+                    ax.toInt(), ay.toInt(), az.toInt(),
+                    pot1, pot2, pot3))
                 try {
                     Thread.sleep(100)
                 } catch (e: InterruptedException) {
