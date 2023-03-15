@@ -326,9 +326,10 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
         // Чтение настроек: не отключать подсветку экрана
         if (appSettings.contains("keepScreenOn")){
-            Log.d("MyLog", "keep screen on - ${appSettings.getBoolean("keepScreenOn", false)}")
             if (appSettings.getBoolean("keepScreenOn", false)){
                 window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
         }
 
