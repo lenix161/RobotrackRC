@@ -28,7 +28,7 @@
         <activity
             android:name=".activities.MainActivity"
             android:exported="true"
-            android:screenOrientation="sensorLandscape">
+            android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -38,12 +38,12 @@
         <activity
             android:name=".activities.BluetoothSettingsActivity"
             android:exported="true"
-            android:screenOrientation="sensorLandscape"/>
+            android:screenOrientation="landscape"/>
 
         <activity
             android:name=".activities.AppSettingsActivity"
             android:exported="true"
-            android:screenOrientation="sensorLandscape"/>
+            android:screenOrientation="landscape"/>
     </application>
 
 </manifest>

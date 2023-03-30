@@ -266,6 +266,7 @@
                 app:layout_constraintTop_toTopOf="parent" >
 
                 <androidx.constraintlayout.widget.ConstraintLayout
+                    android:visibility="visible"
                     android:id="@+id/coordinates_container"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -321,6 +322,19 @@
                     android:id="@+id/web_view"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:visibility="gone"
+                    android:id="@+id/square"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:text="TextView"
+                    android:gravity="center"
+                    android:background="@color/orange"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -435,5 +449,13 @@
         app:layout_constraintEnd_toEndOf="@+id/right_joystick_container"
         app:layout_constraintStart_toStartOf="@+id/right_joystick_container"
         app:srcCompat="@drawable/seekbar_btn" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Button"
+        app:layout_constraintEnd_toStartOf="@+id/settings_button"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

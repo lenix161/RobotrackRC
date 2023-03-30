@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
+import android.view.Surface
 import android.view.View
 import android.view.View.OnTouchListener
 import android.view.WindowManager
@@ -98,14 +99,24 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         webView.loadUrl("http://192.168.1.57:8888/stream")
         webView.settings.javaScriptEnabled = true
 
+        /** Инициализация менеджера  датчиков гироскопа */
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+
         /** Кнопка обнуления гироскопа */
         binding.resetGyroPositionButton.setOnClickListener {
-            offsetax += ax
-            offsetay += ay
-            offsetaz += az
+            offsetax = ((ax + 360) % 360 + offsetax) % 360
+            offsetay = ((ay + 360) % 360 + offsetay) % 360
+            offsetaz = ((az + 360) % 360 + offsetaz) % 360
             Log.d("MyLog", "ax: $offsetax, ay: $offsetay, az: $offsetaz")
 
             //TODO:Корректное обнуление, значения должны быть от -180 до 180
+        }
+
+        binding.button.setOnClickListener {
+            offsetax += ax
+            offsetay += ay
+            offsetaz += az
         }
 
         /** Взаимодействие с левым seek bar */
@@ -144,11 +155,6 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         binding.f4Button.setOnCheckedChangeListener { _, isChecked -> f4 = isChecked }
         binding.f5Button.setOnCheckedChangeListener { _, isChecked -> f5 = isChecked }
         binding.f6Button.setOnCheckedChangeListener { _, isChecked -> f6 = isChecked }
-
-
-        /** Инициализация менеджера  датчиков гироскопа */
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
 
 
         /** Инициализация bluetooth adapter */
@@ -626,10 +632,19 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         }
 
         val remappedRotationMatrix = FloatArray(16)
-        SensorManager.remapCoordinateSystem(rotationMatrix,
-            SensorManager.AXIS_MINUS_X,
-            SensorManager.AXIS_Z,
-            remappedRotationMatrix)
+
+        if (windowManager.getDefaultDisplay().rotation == Surface.ROTATION_90){
+            SensorManager.remapCoordinateSystem(rotationMatrix,
+                SensorManager.AXIS_Y,
+                SensorManager.AXIS_MINUS_X,
+                remappedRotationMatrix)
+        } else if (windowManager.getDefaultDisplay().rotation == Surface.ROTATION_270){
+            SensorManager.remapCoordinateSystem(rotationMatrix,
+                SensorManager.AXIS_MINUS_Y,
+                SensorManager.AXIS_X,
+                remappedRotationMatrix)
+        }
+
 
         val orientation = FloatArray(3)
         SensorManager.getOrientation(remappedRotationMatrix, orientation)
@@ -639,14 +654,27 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         }
 
 
-        ax = (orientation[0] - offsetax) % 180.0f
-        ay = (orientation[1] - offsetay) % 180.0f
-        az = (orientation[2] - offsetaz) % 180.0f
+        ax = (orientation[0] + 720 - offsetax) % 360.0f
+        if (ax > 180) ax -= 360
+        ay = (orientation[1] + 720 - offsetay) % 360.0f
+        if (ay > 180) ay -= 360
+        az = (orientation[2] + 720 - offsetaz) % 360.0f
+        if (az > 180) az -= 360
 
 
         binding.ax.text = "AX: ${ax.toInt()}"
         binding.ay.text = "AY: ${ay.toInt()}"
         binding.az.text = "AZ: ${az.toInt()}"
+
+
+        binding.square.apply {
+            rotationX = ay
+            rotationY = az
+            rotation = ax
+//                translationY = sides * -10
+//                translationX = upDown * 10
+        }
+
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
@@ -699,7 +727,11 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         return false
     }
 
-    /** Поток для отправоления данных: координаты XY с двух джойстиков */
+    /** Поток для отправоления данных:
+     * 1) Координаты XY с двух джойстиков;
+     * 2) Данные датчика гироскопа;
+     * 3) Значения ползунков.
+     * */
     private val task = Runnable {
         while (!Thread.interrupted()) {
             if (ConnectThread.isConnected) {
