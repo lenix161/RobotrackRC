@@ -16,7 +16,7 @@ class BtConnector(private val adapter: BluetoothAdapter, private val listener: C
     }
 
     /** Отправка сообщения на bluetooth устройство */
-    fun sendMessage(list:List<Int>){
+    fun sendMessage(list: List<Int>){
         connectThread.sendReceiveThread.sendMessage(list)
     }
 

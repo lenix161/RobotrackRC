@@ -42,7 +42,6 @@ class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectTh
 
     /** Запись сообщения в output stream ввиде набора байтиов */
     fun sendMessage(list: List<Int>){
-
         try {
             val arr = byteArrayOf(list[0].toByte(), list[1].toByte(), list[2].toByte(), list[3].toByte(), 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
             outputStream.write(arr)

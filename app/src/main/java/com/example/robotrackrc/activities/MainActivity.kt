@@ -711,22 +711,25 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         return false
     }
 
-    /** Поток для отправоления данных:
+    /**
+     * Поток для отправоления данных:
      * 1) Координаты XY с двух джойстиков;
      * 2) Данные датчика гироскопа;
      * 3) Значения ползунков.
+     *
      * */
     private val task = Runnable {
         while (!Thread.interrupted()) {
             if (ConnectThread.isConnected) {
-                btConnector.sendMessage(listOf(leftX, leftY, rightX, rightY,
-                    ax.toInt(), ay.toInt(), az.toInt(),
-                    pot1, pot2, pot3))
                 try {
                     Thread.sleep(100)
                 } catch (e: InterruptedException) {
-                    break
+                    Log.e("MyLog", e.stackTraceToString())
                 }
+
+                btConnector.sendMessage(listOf(leftX, leftY, rightX, rightY,
+                    ax.toInt(), ay.toInt(), az.toInt(),
+                    pot1, pot2, pot3))
 
             }
         }
