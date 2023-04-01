@@ -44,8 +44,9 @@ class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectTh
     fun sendMessage(list: List<Int>){
 
         try {
-            outputStream.write(byteArrayOf(list[0].toByte(), list[1].toByte(), list[2].toByte(), list[3].toByte(), 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00))
-            Log.d("MyLog", "Outputstream: ${list[0]}, ${list[1]}, ${list[2]}, ${list[3]}")
+            val arr = byteArrayOf(list[0].toByte(), list[1].toByte(), list[2].toByte(), list[3].toByte(), 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+            outputStream.write(arr)
+            Log.d("MyLog", "Outputstream: ${list[0]}, ${list[1]}, ${list[2]}, ${list[3]}, arr size ${arr.size}")
         } catch(e: IOException){
             Log.e("MyLog", "Ошибка записи в output stream")
         }

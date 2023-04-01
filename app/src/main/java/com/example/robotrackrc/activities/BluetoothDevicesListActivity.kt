@@ -11,39 +11,48 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.robotrackrc.data.Data
-import com.example.robotrackrc.databinding.ActivityBluetoothSettingsBinding
+import com.example.robotrackrc.databinding.ActivityBluetoothDevicesListBinding
 import com.example.robotrackrc.model.BluetoothDeviceItem
 import com.example.robotrackrc.recyclerview.BtDevicesListAdapter
 
-class BluetoothSettingsActivity: AppCompatActivity(), BtDevicesListAdapter.Listener {
-    private lateinit var binding: ActivityBluetoothSettingsBinding
+class BluetoothDevicesListActivity: AppCompatActivity(), BtDevicesListAdapter.Listener {
+    private lateinit var binding: ActivityBluetoothDevicesListBinding
     private lateinit var rcadapter: BtDevicesListAdapter
     private lateinit var btAdapter: BluetoothAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityBluetoothSettingsBinding.inflate(layoutInflater)
+        binding = ActivityBluetoothDevicesListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        /**Инициализация bluetooth adapter*/
+        /** Инициализация bluetooth adapter */
         val btManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         btAdapter = btManager.adapter
 
-        getPairedDevices()
-
-        /**Инициализация RecyclerView(списка bluetooth устройств)*/
-        rcadapter = BtDevicesListAdapter(this)
-        binding.bluetoothRcView.layoutManager = LinearLayoutManager(this)
-        binding.bluetoothRcView.adapter = rcadapter
-        rcadapter.submitList(Data.BtDevicesList)
-
+        /** Обработка нажатий на кнопку для перехода в настройки bluetooth */
         binding.addNewDeviceButton.setOnClickListener {
             startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
         }
 
+        Toast.makeText(this,
+            "Если нужного устройства нет в списке, нажмите на кнопку справа",
+            Toast.LENGTH_LONG).show()
+
     }
 
-    /**Получение  списка ранее подключенных bluetooth устройств*/
+    override fun onResume() {
+        super.onResume()
+
+        getPairedDevices()
+
+        /** Инициализация RecyclerView(списка bluetooth устройств) */
+        rcadapter = BtDevicesListAdapter(this)
+        binding.bluetoothRcView.layoutManager = LinearLayoutManager(this)
+        binding.bluetoothRcView.adapter = rcadapter
+        rcadapter.submitList(Data.BtDevicesList)
+    }
+
+    /** Получение  списка ранее подключенных bluetooth устройств */
     private fun getPairedDevices() {
         try {
             if (Data.BtDevicesList.size > 0) Data.BtDevicesList.clear()
@@ -57,7 +66,7 @@ class BluetoothSettingsActivity: AppCompatActivity(), BtDevicesListAdapter.Liste
 
     }
 
-    /**Обработчик нажатий на элементы списка*/
+    /** Обработчик нажатий на элементы списка */
     override fun onClick(item: BluetoothDeviceItem) {
         val intent = Intent()
             .putExtra("deviceName", item.deviceName)

@@ -95,8 +95,8 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         /** Подключение изображения с камеры */
         val webView: WebView = binding.webView
         webView.webViewClient = WebViewClient()
-        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-        webView.loadUrl("http://192.168.1.57:8888/stream")
+        webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+        webView.loadUrl("http://192.168.1.58")
         webView.settings.javaScriptEnabled = true
 
         /** Инициализация менеджера  датчиков гироскопа */
@@ -109,14 +109,6 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             offsetay = ((ay + 360) % 360 + offsetay) % 360
             offsetaz = ((az + 360) % 360 + offsetaz) % 360
             Log.d("MyLog", "ax: $offsetax, ay: $offsetay, az: $offsetaz")
-
-            //TODO:Корректное обнуление, значения должны быть от -180 до 180
-        }
-
-        binding.button.setOnClickListener {
-            offsetax += ax
-            offsetay += ay
-            offsetaz += az
         }
 
         /** Взаимодействие с левым seek bar */
@@ -212,7 +204,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                             , Toast.LENGTH_SHORT).show()
                     } else {
                         launcherBtSettingsActivity
-                            .launch(Intent(this, BluetoothSettingsActivity::class.java))
+                            .launch(Intent(this, BluetoothDevicesListActivity::class.java))
                     }
                 } else {
                     // Если подключение уже установлено, появится диалоговое окно
@@ -315,7 +307,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
         // Чтение настроек на автоматическое подключение к последнему устройству и подключение к нему
         if (appSettings.contains("autoConnectToLastDevice") && appSettings.contains("lastDeviceName")
-            && appSettings.contains("lastDeviceMac")){
+            && appSettings.contains("lastDeviceMac") && !ConnectThread.isConnected){
             val flag = appSettings.getBoolean("autoConnectToLastDevice", false)
             val lastDeviceName = appSettings.getString("lastDeviceName", "")
             val lastDeviceMac = appSettings.getString("lastDeviceMac", "")
@@ -666,15 +658,6 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         binding.ay.text = "AY: ${ay.toInt()}"
         binding.az.text = "AZ: ${az.toInt()}"
 
-
-        binding.square.apply {
-            rotationX = ay
-            rotationY = az
-            rotation = ax
-//                translationY = sides * -10
-//                translationX = upDown * 10
-        }
-
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
@@ -743,6 +726,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                 } catch (e: InterruptedException) {
                     break
                 }
+
             }
         }
     }

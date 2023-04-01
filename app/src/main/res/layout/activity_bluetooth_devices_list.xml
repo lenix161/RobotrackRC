@@ -7,6 +7,8 @@
 
 
     <androidx.recyclerview.widget.RecyclerView
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="40dp"
         android:id="@+id/bluetooth_rc_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -15,18 +17,34 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:listitem="@layout/bluetooth_list_item"
-        tools:itemCount="5"/>
+        tools:itemCount="15"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add_new_device_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:clickable="true"
+        android:focusable="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.95"
         app:layout_constraintVertical_bias="0.95"
         app:layout_constraintStart_toStartOf="@+id/bluetooth_rc_view"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/baseline_bluetooth_24" />
+        app:srcCompat="@drawable/baseline_bluetooth_24"
+        android:backgroundTint="@color/orange"
+        app:borderWidth="0dp"/>
+
+    <TextView
+        android:layout_marginTop="10dp"
+        android:id="@+id/Title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Сопряженные устройства"
+        android:textSize="18sp"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

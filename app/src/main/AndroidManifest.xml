@@ -36,7 +36,7 @@
         </activity>
 
         <activity
-            android:name=".activities.BluetoothSettingsActivity"
+            android:name=".activities.BluetoothDevicesListActivity"
             android:exported="true"
             android:screenOrientation="landscape"/>
 
