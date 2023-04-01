@@ -205,6 +205,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                     } else {
                         launcherBtSettingsActivity
                             .launch(Intent(this, BluetoothDevicesListActivity::class.java))
+                        overridePendingTransition(0,0)
                     }
                 } else {
                     // Если подключение уже установлено, появится диалоговое окно

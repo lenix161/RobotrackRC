@@ -3,6 +3,7 @@ package com.example.robotrackrc.activities
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import com.example.robotrackrc.databinding.ActivityAppSettingsBinding
 
@@ -82,6 +83,15 @@ class AppSettingsActivity: AppCompatActivity() {
                 appSettings.getBoolean("keepScreenOn", false)
         } else {
             binding.keepScreenOnCheckbox.isChecked = false
+        }
+
+        /** Чтение настроек: не отключать подсветку экрана */
+        if (appSettings.contains("keepScreenOn")){
+            if (appSettings.getBoolean("keepScreenOn", false)){
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
         }
     }
 }
