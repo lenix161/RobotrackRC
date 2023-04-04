@@ -24,6 +24,7 @@ class ConnectThread(device: BluetoothDevice, private val listener: Listener): Th
     }
 
     override fun run() {
+        Log.d("MyLog", "ConnectThread started")
         try {
             listener.onConnect("Подключение...")
             Log.d("MyLog", "Подключение..")

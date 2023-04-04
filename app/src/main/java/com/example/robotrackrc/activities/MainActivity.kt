@@ -722,7 +722,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         while (!Thread.interrupted()) {
             if (ConnectThread.isConnected) {
                 try {
-                    Thread.sleep(100)
+                    Thread.sleep(1000)
                 } catch (e: InterruptedException) {
                     Log.e("MyLog", e.stackTraceToString())
                 }
