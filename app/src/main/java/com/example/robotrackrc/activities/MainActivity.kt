@@ -612,6 +612,9 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                connectedDeviceName.setTextColor(resources.getColor(R.color.red))
            } else{
                binding.connectionStatus.text = status
+               if (status == "Разрыв соединения"){
+                   binding.connectedDeviceName.setTextColor(resources.getColor(R.color.red))
+               }
            }
 
         }
@@ -721,15 +724,15 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
     private val task = Runnable {
         while (!Thread.interrupted()) {
             if (ConnectThread.isConnected) {
+                btConnector.sendMessage(listOf(leftX, leftY, rightX, rightY,
+                    ax.toInt(), ay.toInt(), az.toInt(),
+                    pot1, pot2, pot3))
+
                 try {
                     Thread.sleep(1000)
                 } catch (e: InterruptedException) {
                     Log.e("MyLog", e.stackTraceToString())
                 }
-
-                btConnector.sendMessage(listOf(leftX, leftY, rightX, rightY,
-                    ax.toInt(), ay.toInt(), az.toInt(),
-                    pot1, pot2, pot3))
 
             }
         }

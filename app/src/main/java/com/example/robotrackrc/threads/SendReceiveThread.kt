@@ -30,13 +30,12 @@ class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectTh
         val buf = ByteArray(4)
         while (true){
             try {
-                Log.d("Mylog", "Получение сообщений работает")
                 val size = inputStream.read(buf)
                 val msg = String(buf, 0, size)
                 Log.d("MyLog", "Полученное сообщение: $msg")
             } catch (e: IOException){
-                listener.onConnect("Отключено")
-                Log.d("MyLog", "Отключено")
+                listener.onConnect("Cоединениe разорвано")
+                Log.d("MyLog", "Отключено SendReciveThread")
                 break
             }
         }

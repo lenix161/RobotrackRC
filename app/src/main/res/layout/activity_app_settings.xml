@@ -17,7 +17,7 @@
         app:srcCompat="@drawable/baseline_close_circle_24" />
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/auto_recenter_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Возвращение в 0"
@@ -25,7 +25,8 @@
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/left_auto_recenter_checkbox"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/auto_connect_title"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.2" />
 
@@ -34,10 +35,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Левый джойстик"
-        app:layout_constraintBottom_toBottomOf="@+id/textView"
+        app:layout_constraintBottom_toBottomOf="@+id/auto_recenter_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/textView" />
+        app:layout_constraintTop_toTopOf="@+id/auto_recenter_title" />
 
     <CheckBox
         android:id="@+id/right_auto_recenter_checkbox"
@@ -51,15 +52,15 @@
         app:layout_constraintVertical_bias="1.0" />
 
     <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
+        android:id="@+id/auto_connect_title"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
         android:text="Автоматически подключаться к последнему устройству"
         android:textColor="@color/black"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.2"
+        app:layout_constraintHorizontal_bias="0.15"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -68,13 +69,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text=""
-        app:layout_constraintBottom_toBottomOf="@+id/textView2"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/textView2"
-        app:layout_constraintTop_toTopOf="@+id/textView2" />
+        app:layout_constraintBottom_toBottomOf="@+id/auto_connect_title"
+        app:layout_constraintEnd_toStartOf="@+id/right_auto_recenter_checkbox"
+        app:layout_constraintStart_toEndOf="@+id/left_auto_recenter_checkbox"
+        app:layout_constraintTop_toTopOf="@+id/auto_connect_title" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/keep_screen_on_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Не выключать подсветку экрана"
@@ -82,8 +83,8 @@
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.2"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/auto_connect_title"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.8" />
 
@@ -92,9 +93,31 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text=""
-        app:layout_constraintBottom_toBottomOf="@+id/textView3"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/textView3"
-        app:layout_constraintTop_toTopOf="@+id/textView3" />
+        app:layout_constraintBottom_toBottomOf="@+id/keep_screen_on_title"
+        app:layout_constraintEnd_toEndOf="@+id/auto_connect_checkbox"
+        app:layout_constraintStart_toStartOf="@+id/auto_connect_checkbox"
+        app:layout_constraintTop_toTopOf="@+id/keep_screen_on_title" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:scaleX="1.1"
+        android:background="?android:attr/listDivider"
+        app:layout_constraintBottom_toTopOf="@+id/auto_connect_title"
+        app:layout_constraintEnd_toEndOf="@+id/right_auto_recenter_checkbox"
+        app:layout_constraintStart_toStartOf="@+id/auto_connect_title"
+        app:layout_constraintTop_toBottomOf="@+id/auto_recenter_title" />
+
+    <View
+        android:id="@+id/divider2"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:scaleX="1.1"
+        android:background="?android:attr/listDivider"
+        app:layout_constraintBottom_toTopOf="@+id/keep_screen_on_title"
+        app:layout_constraintEnd_toEndOf="@+id/divider"
+        app:layout_constraintStart_toStartOf="@+id/divider"
+        app:layout_constraintTop_toBottomOf="@+id/auto_connect_title" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
