@@ -48,6 +48,7 @@ class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectTh
                 list[3].toByte(), (0x04).toByte(), (0x05).toByte(), (0x00).toByte(), (0x00).toByte(),
                 (0x00).toByte(), (0x00).toByte(), (0x00).toByte(), (0x0A).toByte(), (0x0D).toByte())
             outputStream.write(arr)
+            outputStream.flush()
             Log.d("MyLog", "Outputstream: ${list[0].toByte()}, ${list[1].toByte()}, ${list[2]}, ${list[3]}, ${list[4]}" +
                     ", ${list[5]}, ${list[6]}, ${list[7]}, ${list[8]}, ${list[9]}")
         } catch(e: IOException){
