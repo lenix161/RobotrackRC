@@ -32,7 +32,7 @@ import com.example.robotrackrc.BtConnector
 import com.example.robotrackrc.R
 import com.example.robotrackrc.databinding.ActivityMainBinding
 import com.example.robotrackrc.threads.ConnectThread
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.util.*
 
 
 class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventListener, OnTouchListener {
@@ -761,8 +761,9 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
      *
      * */
     private val task = Runnable {
-        while (!Thread.interrupted()) {
-            if (ConnectThread.isConnected) {
+        val timer = Timer()
+        timer.schedule(object : TimerTask() {
+            override fun run() {
                 var fSum = 0
                 val data = mutableListOf<Int>()
                 data.add(leftX)
@@ -783,15 +784,39 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                 data.add(pot2)
                 data.add(pot3)
                 btConnector.sendMessage(data)
-
-                try {
-                    Thread.sleep(1000)
-                } catch (e: InterruptedException) {
-                    Log.e("MyLog", e.stackTraceToString())
-                }
-
             }
-        }
+        }, 0, 200)
+//        while (!Thread.interrupted()) {
+//            if (ConnectThread.isConnected) {
+//                var fSum = 0
+//                val data = mutableListOf<Int>()
+//                data.add(leftX)
+//                data.add(leftY)
+//                data.add(rightX)
+//                data.add(rightY)
+//                data.add(ax.toInt())
+//                data.add(ay.toInt())
+//                data.add(az.toInt())
+//                if (f1) fSum += 2
+//                if (f2) fSum += 4
+//                if (f3) fSum += 8
+//                if (f4) fSum += 16
+//                if (f5) fSum += 32
+//                if (f6) fSum += 64
+//                data.add(fSum)
+//                data.add(pot1)
+//                data.add(pot2)
+//                data.add(pot3)
+//                btConnector.sendMessage(data)
+//
+//                try {
+//                    Thread.sleep(1000)
+//                } catch (e: InterruptedException) {
+//                    Log.e("MyLog", e.stackTraceToString())
+//                }
+//
+//            }
+//        }
     }
 
 }
