@@ -25,6 +25,7 @@
         tools:targetApi="31"
         android:usesCleartextTraffic="true"
         android:networkSecurityConfig="@xml/network_security_config">
+        <!-- usesCleartextTraffic - позволяет открывать http -->
         <activity
             android:name=".activities.MainActivity"
             android:exported="true"

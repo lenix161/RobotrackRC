@@ -27,11 +27,11 @@ class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectTh
 
     override fun run() {
         Log.d("MyLog", "SendReciveThread started")
-        val buf = ByteArray(4)
+        val buf = ByteArray(256)
         while (true){
             try {
                 val size = inputStream.read(buf)
-                val msg = String(buf, 0, size)
+                val msg = String(buf, 0, size?:0)
                 Log.d("MyLog", "Полученное сообщение: $msg")
             } catch (e: IOException){
                 listener.onConnect("Cоединениe разорвано")
@@ -44,9 +44,20 @@ class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectTh
     /** Запись сообщения в output stream ввиде набора байтиов */
     fun sendMessage(list: List<Int>){
         try {
-            val arr = byteArrayOf(list[0].toByte(), list[1].toByte(), list[2].toByte(),
-                list[3].toByte(), (0x04).toByte(), (0x05).toByte(), (0x00).toByte(), (0x00).toByte(),
-                (0x00).toByte(), (0x00).toByte(), (0x00).toByte(), (0x0A).toByte(), (0x0D).toByte())
+            val arr = byteArrayOf(
+                list[0].toByte(),
+                list[1].toByte(),
+                list[2].toByte(),
+                list[3].toByte(),
+                list[4].toByte(),
+                list[5].toByte(),
+                list[6].toByte(),
+                list[7].toByte(),
+                0x00,
+                list[8].toByte(),
+                list[9].toByte(),
+                list[10].toByte(),
+                list[11].toByte())
             outputStream.write(arr)
             outputStream.flush()
             Log.d("MyLog", "Outputstream: ${list[0].toByte()}, ${list[1].toByte()}, ${list[2]}, ${list[3]}, ${list[4]}" +

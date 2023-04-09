@@ -21,6 +21,7 @@ import android.view.View.OnTouchListener
 import android.view.WindowManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,6 +32,7 @@ import com.example.robotrackrc.BtConnector
 import com.example.robotrackrc.R
 import com.example.robotrackrc.databinding.ActivityMainBinding
 import com.example.robotrackrc.threads.ConnectThread
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 
 class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventListener, OnTouchListener {
@@ -91,13 +93,6 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         /** Инициализация Shared Preferences */
         appSettings = getSharedPreferences("Settings", MODE_PRIVATE)
         editor = appSettings.edit()
-
-        /** Подключение изображения с камеры */
-        val webView: WebView = binding.webView
-        webView.webViewClient = WebViewClient()
-        webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
-        webView.loadUrl("http://192.168.1.58")
-        webView.settings.javaScriptEnabled = true
 
         /** Инициализация менеджера  датчиков гироскопа */
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -211,11 +206,11 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                     // Если подключение уже установлено, появится диалоговое окно
                     //  для уточнения намерений пользователя
                     val builder = AlertDialog.Builder(this)
-                    builder.setMessage("Отключиться?")
+                    builder.setTitle("Отключиться?")
                         .setPositiveButton("Да") { dialog, id ->
                             btConnector.disconnect()
                         }
-                        .setNegativeButton("Нет") { dialog, id ->
+                        .setNeutralButton("Нет") { dialog, id ->
                             // User cancelled the dialog
                         }
                     // Create the AlertDialog object and return it
@@ -416,6 +411,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
     private fun switchGyroAndCamButtonListener(){
         if (!isCameraStarted){
             isCameraStarted = true
+            enableCameraView()
             binding.coordinatesContainer.visibility = View.GONE
             binding.webView.visibility = View.VISIBLE
             binding.switchGyroAndCamButton.setImageDrawable(resources.getDrawable(R.drawable.cam_to_gyro_btn))
@@ -424,7 +420,49 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             binding.webView.visibility = View.GONE
             binding.coordinatesContainer.visibility = View.VISIBLE
             binding.switchGyroAndCamButton.setImageDrawable(resources.getDrawable(R.drawable.gyro_to_cam_btn))
+            val webView: WebView = binding.webView
+            webView.destroy()
         }
+    }
+
+    /** Подключение изображения с камеры */
+    private fun enableCameraView(){
+        // http://192.168.1.58
+        // Чтение настроек и получение адреса камеры, если ранее уже подключались
+        var cameraAddress = ""
+        if (appSettings.contains("lastCameraAddress")){
+            cameraAddress = appSettings.getString("lastCameraAddress", "").toString()
+        }
+
+        val editText = EditText(this)
+        editText.textAlignment = View.TEXT_ALIGNMENT_CENTER
+        editText.setText(cameraAddress)
+
+        // Окно для ввода адреса
+        val builder = AlertDialog.Builder(this)
+            .setTitle("Введите адрес")
+            .setView(editText)
+            .setPositiveButton("Подключиться") { dialog, id ->
+                cameraAddress = editText.text.toString()
+                editor.putString("lastCameraAddress", cameraAddress)
+                editor.apply()
+
+                val webView: WebView = binding.webView
+                webView.webViewClient = WebViewClient()
+                webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+                webView.loadUrl(cameraAddress)
+                webView.settings.javaScriptEnabled = true
+            }
+            .setNeutralButton("Отмена") { dialog, id ->
+                isCameraStarted = false
+                binding.webView.visibility = View.GONE
+                binding.coordinatesContainer.visibility = View.VISIBLE
+                binding.switchGyroAndCamButton.setImageDrawable(resources.getDrawable(R.drawable.gyro_to_cam_btn))
+            }
+            .create()
+
+        builder.setCanceledOnTouchOutside(false)
+        builder.show()
     }
 
     /** Обработка взаимодействий с переключателем типов джойстика */
@@ -559,6 +597,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
         return Pair(x,y)
     }
+
 
     /** Launcher для activityForResult (включение bluetooth, если он выключен) */
     private fun registerBtEnableActivityLauncher(){
@@ -724,9 +763,26 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
     private val task = Runnable {
         while (!Thread.interrupted()) {
             if (ConnectThread.isConnected) {
-                btConnector.sendMessage(listOf(leftX, leftY, rightX, rightY,
-                    ax.toInt(), ay.toInt(), az.toInt(),
-                    pot1, pot2, pot3))
+                var fSum = 0
+                val data = mutableListOf<Int>()
+                data.add(leftX)
+                data.add(leftY)
+                data.add(rightX)
+                data.add(rightY)
+                data.add(ax.toInt())
+                data.add(ay.toInt())
+                data.add(az.toInt())
+                if (f1) fSum += 2
+                if (f2) fSum += 4
+                if (f3) fSum += 8
+                if (f4) fSum += 16
+                if (f5) fSum += 32
+                if (f6) fSum += 64
+                data.add(fSum)
+                data.add(pot1)
+                data.add(pot2)
+                data.add(pot3)
+                btConnector.sendMessage(data)
 
                 try {
                     Thread.sleep(1000)
