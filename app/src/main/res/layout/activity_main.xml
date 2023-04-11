@@ -233,7 +233,7 @@
                 android:id="@+id/right_X"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="X: 0"
+                android:text="Z: 0"
                 app:layout_constraintEnd_toEndOf="@+id/right_joystick_container"
                 app:layout_constraintStart_toStartOf="@+id/right_joystick_container"
                 app:layout_constraintTop_toBottomOf="@+id/right_joystick_container" />
@@ -242,7 +242,7 @@
                 android:id="@+id/right_Y"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Y: 0"
+                android:text="W: 0"
                 app:layout_constraintEnd_toEndOf="@+id/right_X"
                 app:layout_constraintStart_toStartOf="@+id/right_X"
                 app:layout_constraintTop_toBottomOf="@+id/right_X" />

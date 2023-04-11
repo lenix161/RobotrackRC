@@ -5,6 +5,7 @@ import android.util.Log
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import kotlin.experimental.and
 
 
 class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectThread.Listener): Thread() {
@@ -56,7 +57,9 @@ class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectTh
                 0x00,
                 list[8].toByte(),
                 list[9].toByte(),
-                list[10].toByte(),)
+                list[10].toByte())
+
+            val arr2 = byteArrayOf(list[0].toByte(), list[1].toByte(), list[2].toByte(), list[3].toByte(), 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x0D, 0x0A)
             outputStream.write(arr)
             outputStream.flush()
             Log.d("MyLog", "Outputstream: ${list[0].toByte()}, ${list[1].toByte()}, ${list[2]}, ${list[3]}, ${list[4]}" +

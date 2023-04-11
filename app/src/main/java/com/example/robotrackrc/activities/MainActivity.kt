@@ -32,7 +32,6 @@ import com.example.robotrackrc.BtConnector
 import com.example.robotrackrc.R
 import com.example.robotrackrc.databinding.ActivityMainBinding
 import com.example.robotrackrc.threads.ConnectThread
-import java.util.*
 
 
 class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventListener, OnTouchListener {
@@ -96,7 +95,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
         /** Инициализация менеджера  датчиков гироскопа */
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR)
 
         /** Кнопка обнуления гироскопа */
         binding.resetGyroPositionButton.setOnClickListener {
@@ -395,10 +394,6 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             binding.middleSeekBarValue.visibility = View.INVISIBLE
             binding.rightSeekBarValue.visibility = View.INVISIBLE
 
-            binding.leftSeekBar.progress = 0
-            binding.middleSeekBar.progress = 0
-            binding.rightSeekBar.progress = 0
-
             // Делаем видимыми ранее скрытые View
             binding.rightJoystick.visibility = View.VISIBLE
             binding.switchRightControllerType.visibility = View.VISIBLE
@@ -420,8 +415,6 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             binding.webView.visibility = View.GONE
             binding.coordinatesContainer.visibility = View.VISIBLE
             binding.switchGyroAndCamButton.setImageDrawable(resources.getDrawable(R.drawable.gyro_to_cam_btn))
-            val webView: WebView = binding.webView
-            webView.destroy()
         }
     }
 
@@ -440,8 +433,9 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
         // Окно для ввода адреса
         val builder = AlertDialog.Builder(this)
-            .setTitle("Введите адрес")
+            .setTitle("Введите адрес камеры")
             .setView(editText)
+
             .setPositiveButton("Подключиться") { dialog, id ->
                 cameraAddress = editText.text.toString()
                 editor.putString("lastCameraAddress", cameraAddress)
@@ -450,7 +444,11 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                 val webView: WebView = binding.webView
                 webView.webViewClient = WebViewClient()
                 webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-                webView.loadUrl(cameraAddress)
+                if (cameraAddress.contains("/stream")){
+                    webView.loadUrl(cameraAddress)
+                } else {
+                    webView.loadUrl("$cameraAddress/stream")
+                }
                 webView.settings.javaScriptEnabled = true
             }
             .setNeutralButton("Отмена") { dialog, id ->
@@ -461,7 +459,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             }
             .create()
 
-        builder.setCanceledOnTouchOutside(false)
+        //builder.setCanceledOnTouchOutside(false)
         builder.show()
     }
 
@@ -491,8 +489,8 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                     rightX = 0
                     rightY = 0
                     // Обновляем UI
-                    binding.rightX.text = "X: $rightX"
-                    binding.rightY.text = "Y: $rightY"
+                    binding.rightX.text = "Z: $rightX"
+                    binding.rightY.text = "W: $rightY"
                 } else {
                     binding.rightJoystick.visibility = View.VISIBLE
                     binding.rightJoystick.resetButtonPosition()
@@ -535,14 +533,14 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                         else -> {}
                     }
                     // Обновляем UI
-                    binding.rightX.text = "X: $rightX"
-                    binding.rightY.text = "Y: $rightY"
+                    binding.rightX.text = "Z: $rightX"
+                    binding.rightY.text = "W: $rightY"
                 } else if (action == MotionEvent.ACTION_UP){
                     rightX = 0
                     rightY = 0
                     // Обновляем UI
-                    binding.rightX.text = "X: $rightX"
-                    binding.rightY.text = "Y: $rightY"
+                    binding.rightX.text = "Z: $rightX"
+                    binding.rightY.text = "W: $rightY"
                 }
             }
         }
@@ -567,8 +565,8 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                 rightY = xy.second.toInt()
 
                 // Обновляем UI
-                binding.rightX.text = "X: $rightX"
-                binding.rightY.text = "Y: $rightY"
+                binding.rightX.text = "Z: $rightX"
+                binding.rightY.text = "W: $rightY"
             }
         }
 
@@ -697,9 +695,9 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         if (az > 180) az -= 360
 
 
-        binding.ax.text = "AX: ${ax.toInt()}"
-        binding.ay.text = "AY: ${ay.toInt()}"
-        binding.az.text = "AZ: ${az.toInt()}"
+        binding.ax.text = "AX: ${(ax/1.79).toInt()}"
+        binding.ay.text = "AY: ${(ay/1.79).toInt()}"
+        binding.az.text = "AZ: ${(az/1.79).toInt()}"
 
     }
 
@@ -759,20 +757,21 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
      * 2) Данные датчика гироскопа;
      * 3) Значения ползунков.
      *
+     * Сначала данные отправляются раз в 1сек, затем скорость повышается до раз в 100 миллесекунд
      * */
     private val task = Runnable {
-        val timer = Timer()
-        timer.schedule(object : TimerTask() {
-            override fun run() {
+        var sendSpeed = 1000
+        while (!Thread.interrupted()) {
+            if (ConnectThread.isConnected) {
                 var fSum = 0
                 val data = mutableListOf<Int>()
                 data.add(leftX)
                 data.add(leftY)
                 data.add(rightX)
                 data.add(rightY)
-                data.add(ax.toInt())
-                data.add(ay.toInt())
-                data.add(az.toInt())
+                data.add((ax/1.79).toInt())
+                data.add((ay/1.79).toInt())
+                data.add((az/1.79).toInt())
                 if (f1) fSum += 2
                 if (f2) fSum += 4
                 if (f3) fSum += 8
@@ -784,39 +783,16 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                 data.add(pot2)
                 data.add(pot3)
                 btConnector.sendMessage(data)
+
+                try {
+                    Thread.sleep(sendSpeed.toLong())
+                } catch (e: InterruptedException) {
+                    Log.e("MyLog", e.stackTraceToString())
+                }
+                Log.d("MyLog", "Sending speed = $sendSpeed")
+                if (sendSpeed > 100) sendSpeed -= 100
             }
-        }, 0, 200)
-//        while (!Thread.interrupted()) {
-//            if (ConnectThread.isConnected) {
-//                var fSum = 0
-//                val data = mutableListOf<Int>()
-//                data.add(leftX)
-//                data.add(leftY)
-//                data.add(rightX)
-//                data.add(rightY)
-//                data.add(ax.toInt())
-//                data.add(ay.toInt())
-//                data.add(az.toInt())
-//                if (f1) fSum += 2
-//                if (f2) fSum += 4
-//                if (f3) fSum += 8
-//                if (f4) fSum += 16
-//                if (f5) fSum += 32
-//                if (f6) fSum += 64
-//                data.add(fSum)
-//                data.add(pot1)
-//                data.add(pot2)
-//                data.add(pot3)
-//                btConnector.sendMessage(data)
-//
-//                try {
-//                    Thread.sleep(1000)
-//                } catch (e: InterruptedException) {
-//                    Log.e("MyLog", e.stackTraceToString())
-//                }
-//
-//            }
-//        }
+        }
     }
 
 }
