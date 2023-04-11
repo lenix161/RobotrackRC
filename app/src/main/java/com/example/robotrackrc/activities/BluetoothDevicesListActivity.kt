@@ -1,6 +1,5 @@
 package com.example.robotrackrc.activities
 
-import android.app.ProgressDialog.show
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
@@ -15,7 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.robotrackrc.data.Data
 import com.example.robotrackrc.databinding.ActivityBluetoothDevicesListBinding
-import com.example.robotrackrc.model.BluetoothDeviceItem
+import com.example.robotrackrc.datamodel.BluetoothDeviceItem
 import com.example.robotrackrc.recyclerview.BtDevicesListAdapter
 
 class BluetoothDevicesListActivity: AppCompatActivity(), BtDevicesListAdapter.Listener {

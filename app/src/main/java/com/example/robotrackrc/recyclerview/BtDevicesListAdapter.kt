@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.robotrackrc.R
 import com.example.robotrackrc.databinding.BluetoothListItemBinding
-import com.example.robotrackrc.model.BluetoothDeviceItem
+import com.example.robotrackrc.datamodel.BluetoothDeviceItem
 
 class BtDevicesListAdapter(private val listener: Listener)
     : ListAdapter<BluetoothDeviceItem, BtDevicesListAdapter.ItemHolder>(ItemComparator()) {

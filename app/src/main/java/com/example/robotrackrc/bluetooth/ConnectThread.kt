@@ -1,4 +1,4 @@
-package com.example.robotrackrc.threads
+package com.example.robotrackrc.bluetooth
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
@@ -24,24 +24,24 @@ class ConnectThread(device: BluetoothDevice, private val listener: Listener): Th
     }
 
     override fun run() {
-        Log.d("MyLog", "ConnectThread started")
+        Log.d("RobotrackRC", "ConnectThread started")
         try {
             listener.onConnect("Подключение...")
-            Log.d("MyLog", "Подключение..")
+            Log.d("RobotrackRC", "Подключение..")
             socket.connect()
             listener.onConnect("Подключено")
-            Log.d("MyLog", "Подключено")
+            Log.d("RobotrackRC", "Подключено")
 
             sendReceiveThread = SendReceiveThread(socket, listener)
             sendReceiveThread.start()
             isConnected = true
         } catch (e: SecurityException){
             closeSocket()
-            Log.e("MyLog", "Нет прав для подключения по bluetooth")
+            Log.e("RobotrackRC", "Нет прав для подключения по bluetooth")
         } catch (e: IOException){
             closeSocket()
             listener.onConnect("Ошибка подключения")
-            Log.e("MyLog", "Невозможно подключиться к устройству")
+            Log.e("RobotrackRC", "Невозможно подключиться к устройству")
         }
     }
 
@@ -51,9 +51,9 @@ class ConnectThread(device: BluetoothDevice, private val listener: Listener): Th
             socket.close()
             isConnected = false
             listener.onConnect("Отключено")
-            Log.d("MyLog", "Отключено ConnectThread")
+            Log.d("RobotrackRC", "Отключено ConnectThread")
         } catch (e: IOException){
-            Log.e("MyLog", "Невозможно закрыть сокет")
+            Log.e("RobotrackRC", "Невозможно закрыть сокет")
         }
     }
 

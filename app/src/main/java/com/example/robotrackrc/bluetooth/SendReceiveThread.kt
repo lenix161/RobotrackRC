@@ -1,11 +1,10 @@
-package com.example.robotrackrc.threads
+package com.example.robotrackrc.bluetooth
 
 import android.bluetooth.BluetoothSocket
 import android.util.Log
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import kotlin.experimental.and
 
 
 class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectThread.Listener): Thread() {
@@ -27,16 +26,16 @@ class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectTh
     }
 
     override fun run() {
-        Log.d("MyLog", "SendReciveThread started")
+        Log.d("RobotrackRC", "SendReciveThread started")
         val buf = ByteArray(256)
         while (true){
             try {
                 val size = inputStream.read(buf)
                 val msg = String(buf, 0, size?:0)
-                Log.d("MyLog", "Полученное сообщение: $msg")
+                Log.d("RobotrackRC", "Полученное сообщение: $msg")
             } catch (e: IOException){
                 listener.onConnect("Cоединениe разорвано")
-                Log.d("MyLog", "Отключено SendReciveThread")
+                Log.d("RobotrackRC", "Отключено SendReciveThread")
                 break
             }
         }
@@ -62,10 +61,10 @@ class SendReceiveThread(socket: BluetoothSocket, private val listener: ConnectTh
             val arr2 = byteArrayOf(list[0].toByte(), list[1].toByte(), list[2].toByte(), list[3].toByte(), 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x0D, 0x0A)
             outputStream.write(arr)
             outputStream.flush()
-            Log.d("MyLog", "Outputstream: ${list[0].toByte()}, ${list[1].toByte()}, ${list[2]}, ${list[3]}, ${list[4]}" +
+            Log.d("RobotrackRC", "Outputstream: ${list[0].toByte()}, ${list[1].toByte()}, ${list[2]}, ${list[3]}, ${list[4]}" +
                     ", ${list[5]}, ${list[6]}, ${list[7]}, ${list[8]}, ${list[9]}")
         } catch(e: IOException){
-            Log.e("MyLog", "Ошибка записи в output stream")
+            Log.e("RobotrackRC", "Ошибка записи в output stream")
         }
     }
 }

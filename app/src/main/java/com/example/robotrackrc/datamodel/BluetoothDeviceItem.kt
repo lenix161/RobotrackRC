@@ -1,4 +1,4 @@
-package com.example.robotrackrc.model
+package com.example.robotrackrc.datamodel
 
 data class BluetoothDeviceItem(
     var deviceName: String,

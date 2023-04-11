@@ -1,7 +1,6 @@
-package com.example.robotrackrc
+package com.example.robotrackrc.bluetooth
 
 import android.bluetooth.BluetoothAdapter
-import com.example.robotrackrc.threads.ConnectThread
 
 class BtConnector(private val adapter: BluetoothAdapter, private val listener: ConnectThread.Listener) {
     lateinit var connectThread: ConnectThread

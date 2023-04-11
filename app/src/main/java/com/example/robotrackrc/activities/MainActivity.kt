@@ -28,10 +28,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.codertainment.dpadview.DPadView
-import com.example.robotrackrc.BtConnector
 import com.example.robotrackrc.R
+import com.example.robotrackrc.bluetooth.BtConnector
+import com.example.robotrackrc.bluetooth.ConnectThread
 import com.example.robotrackrc.databinding.ActivityMainBinding
-import com.example.robotrackrc.threads.ConnectThread
 
 
 class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventListener, OnTouchListener {
@@ -77,6 +77,8 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
     private var isCameraStarted = false
     private var isSeekBarEnable = false
 
+    private var isSensorOk = false
+
     // Поток для сбора и отправки данных по bluetooth
     private lateinit var collectDataThread: Thread
 
@@ -95,14 +97,18 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
         /** Инициализация менеджера  датчиков гироскопа */
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR)
+        if (sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) != null){
+            sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+            isSensorOk = true
+        }
+
 
         /** Кнопка обнуления гироскопа */
         binding.resetGyroPositionButton.setOnClickListener {
             offsetax = ((ax + 360) % 360 + offsetax) % 360
             offsetay = ((ay + 360) % 360 + offsetay) % 360
             offsetaz = ((az + 360) % 360 + offsetaz) % 360
-            Log.d("MyLog", "ax: $offsetax, ay: $offsetay, az: $offsetaz")
+            Log.d("RobotrackRC", "ax: $offsetax, ay: $offsetay, az: $offsetaz")
         }
 
         /** Взаимодействие с левым seek bar */
@@ -263,7 +269,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         if (appSettings.contains("leftAutoRecenter")){
             val a = appSettings.getBoolean("leftAutoRecenter", true)
             binding.leftJoystick.isAutoReCenterButton = a
-            Log.d("MyLog", "left $a read")
+            Log.d("RobotrackRC", "left $a read")
         }
 
         /** Инициализация прослушивателя взаимодействий с правым джойстиком */
@@ -273,7 +279,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         if (appSettings.contains("rightAutoRecenter")){
             val a = appSettings.getBoolean("rightAutoRecenter", true)
             binding.rightJoystick.isAutoReCenterButton = a
-            Log.d("MyLog", "right $a read")
+            Log.d("RobotrackRC", "right $a read")
         }
 
         /** Запуск потока для отправки данных по bluetooth */
@@ -284,7 +290,13 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
     override fun onResume() {
         super.onResume()
         // Включение датчика гироскопа
-        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST)
+        if (isSensorOk){
+            sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST)
+        } else {
+            Toast.makeText(this, "На вашем устройстве отсутствуют необходимые датчики для работы гироскопа",
+                Toast.LENGTH_SHORT).show()
+        }
+
 
         // Чтение настроек для девого джойстика
         if (appSettings.contains("leftAutoRecenter")){
@@ -420,7 +432,6 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
     /** Подключение изображения с камеры */
     private fun enableCameraView(){
-        // http://192.168.1.58
         // Чтение настроек и получение адреса камеры, если ранее уже подключались
         var cameraAddress = ""
         if (appSettings.contains("lastCameraAddress")){
@@ -458,8 +469,6 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                 binding.switchGyroAndCamButton.setImageDrawable(resources.getDrawable(R.drawable.gyro_to_cam_btn))
             }
             .create()
-
-        //builder.setCanceledOnTouchOutside(false)
         builder.show()
     }
 
@@ -630,7 +639,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                 editor.putString("lastDeviceName", deviceName)
                 editor.putString("lastDeviceMac", deviceMac)
                 editor.apply()
-                Log.d("MyLog", "Устройство $deviceName $deviceMac записано")
+                Log.d("RobotrackRC", "Устройство $deviceName $deviceMac записано")
             }
         }
     }
@@ -662,6 +671,11 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         val rotationMatrix = FloatArray(16)
         if (event != null) {
             SensorManager.getRotationMatrixFromVector(rotationMatrix,event.values)
+        } else {
+            Toast.makeText(this, "На вашем отсутствуют нужные датчики для работы гироскопа",
+            Toast.LENGTH_SHORT).show()
+            sensorManager.unregisterListener(this)
+            return
         }
 
         val remappedRotationMatrix = FloatArray(16)
@@ -693,7 +707,6 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         if (ay > 180) ay -= 360
         az = (orientation[2] + 720 - offsetaz) % 360.0f
         if (az > 180) az -= 360
-
 
         binding.ax.text = "AX: ${(ax/1.79).toInt()}"
         binding.ay.text = "AY: ${(ay/1.79).toInt()}"
@@ -757,7 +770,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
      * 2) Данные датчика гироскопа;
      * 3) Значения ползунков.
      *
-     * Сначала данные отправляются раз в 1сек, затем скорость повышается до раз в 100 миллесекунд
+     * Сначала данные отправляются раз в 1сек, затем скорость повышается до раза в 100 миллесекунд
      * */
     private val task = Runnable {
         var sendSpeed = 1000
@@ -787,9 +800,9 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                 try {
                     Thread.sleep(sendSpeed.toLong())
                 } catch (e: InterruptedException) {
-                    Log.e("MyLog", e.stackTraceToString())
+                    Log.e("RobotrackRC", e.stackTraceToString())
                 }
-                Log.d("MyLog", "Sending speed = $sendSpeed")
+                Log.d("RobotrackRC", "Sending speed = $sendSpeed")
                 if (sendSpeed > 100) sendSpeed -= 100
             }
         }

@@ -1,6 +1,6 @@
 package com.example.robotrackrc.data
 
-import com.example.robotrackrc.model.BluetoothDeviceItem
+import com.example.robotrackrc.datamodel.BluetoothDeviceItem
 
 object Data {
     var BtDevicesList = mutableListOf<BluetoothDeviceItem>()
