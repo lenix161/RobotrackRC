@@ -215,7 +215,6 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                     builder.setTitle("Отключиться?")
                         .setPositiveButton("Да") { dialog, id ->
                             btConnector.disconnect()
-                            collectDataThread.interrupt()
                         }
                         .setNeutralButton("Нет") { dialog, id ->
                             // User cancelled the dialog
@@ -284,10 +283,6 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             Log.d("RobotrackRC", "right $a read")
         }
 
-        /** Запуск потока для отправки данных по bluetooth */
-        collectDataThread = Thread(task, "BtSendThread")
-        collectDataThread.start()
-
     }
 
     override fun onResume() {
@@ -352,7 +347,9 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
     override fun onDestroy() {
         super.onDestroy()
         // Остановка потока собирающего данные для отправки по bluetooth
-        collectDataThread.interrupt()
+        if (this::collectDataThread.isInitialized){
+            collectDataThread.interrupt()
+        }
     }
 
     /*** Явный запрос прав на bluetoocth подключение */
@@ -659,6 +656,10 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                 // Получаем данные о устройстве и подключаемся по MAC адресу
                 btConnector.connect(deviceMac.toString())
 
+                /** Запуск потока для отправки данных по bluetooth */
+                collectDataThread = Thread(task)
+                collectDataThread.start()
+
                 // Обновляем UI
                 binding.connectedDeviceName.text = deviceName
                 binding.connectedDeviceName.setTextColor(resources.getColor(R.color.green))
@@ -836,6 +837,10 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                     sec++
                 } else {
                     if (sendSpeed > 100) sendSpeed -= 50
+                }
+
+                if(!ConnectThread.isConnected){
+                    Thread.currentThread().interrupt()
                 }
 
             }
