@@ -2,9 +2,9 @@ package com.example.robotrackrc.activities
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import com.example.robotrackrc.databinding.ActivityAppSettingsBinding
 
 class AppSettingsActivity: AppCompatActivity() {
@@ -14,6 +14,7 @@ class AppSettingsActivity: AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         binding = ActivityAppSettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

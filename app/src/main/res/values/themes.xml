@@ -12,7 +12,9 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
-        <!-- Customize your theme here. -->
+
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+
     </style>
     
     <style name="SwtchTheme" parent="Theme.MaterialComponents.Light.NoActionBar">

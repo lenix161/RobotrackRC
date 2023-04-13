@@ -11,6 +11,7 @@ import android.provider.Settings
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.robotrackrc.data.Data
 import com.example.robotrackrc.databinding.ActivityBluetoothDevicesListBinding
@@ -22,12 +23,13 @@ class BluetoothDevicesListActivity: AppCompatActivity(), BtDevicesListAdapter.Li
     private lateinit var rcadapter: BtDevicesListAdapter
     private lateinit var btAdapter: BluetoothAdapter
 
-    // Настройки приложения
+    // Настройки приложенияны
     private lateinit var appSettings: SharedPreferences
     private lateinit var editor: SharedPreferences.Editor
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         binding = ActivityBluetoothDevicesListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

@@ -27,6 +27,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import com.codertainment.dpadview.DPadView
 import com.example.robotrackrc.R
 import com.example.robotrackrc.bluetooth.BtConnector
@@ -88,6 +89,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -101,7 +103,6 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
             isSensorOk = true
         }
-
 
         /** Кнопка обнуления гироскопа */
         binding.resetGyroPositionButton.setOnClickListener {
@@ -214,6 +215,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                     builder.setTitle("Отключиться?")
                         .setPositiveButton("Да") { dialog, id ->
                             btConnector.disconnect()
+                            collectDataThread.interrupt()
                         }
                         .setNeutralButton("Нет") { dialog, id ->
                             // User cancelled the dialog
@@ -285,6 +287,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         /** Запуск потока для отправки данных по bluetooth */
         collectDataThread = Thread(task, "BtSendThread")
         collectDataThread.start()
+
     }
 
     override fun onResume() {
@@ -294,7 +297,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
             sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST)
         } else {
             Toast.makeText(this, "На вашем устройстве отсутствуют необходимые датчики для работы гироскопа",
-                Toast.LENGTH_SHORT).show()
+                Toast.LENGTH_LONG).show()
         }
 
 
@@ -594,14 +597,41 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         // Преобразование квадратной координатной плоскости в координатную полскость окружности
         // В угле 45 градусов было x:60 y:60, стало в угле 45 градусов x:100 y:100
         // Поместили квадрат в окружность
-        val x = (Math.abs(u*v) / (u*v) / (v * Math.sqrt(2.0))) *
+        var x = (Math.abs(u*v) / (u*v) / (v * Math.sqrt(2.0))) *
                 Math.sqrt(u*u + v*v - Math.sqrt((u*u + v*v) * (u*u + v*v - 4 * u*u * v*v))) *
                 strength
 
-        val y = (Math.abs(u*v) / (u*v) / (u * Math.sqrt(2.0))) *
+        var y = (Math.abs(u*v) / (u*v) / (u * Math.sqrt(2.0))) *
                 Math.sqrt(u*u + v*v - Math.sqrt((u*u + v*v) * (u*u + v*v - 4 * u*u * v*v))) *
                 strength
 
+        if(x>15){
+            x++
+            x = Math.ceil(x)
+            if (x > 100.0){
+                 x = 100.0
+            }
+        } else if (x < -15) {
+             x--
+            x = Math.floor(x)
+            if (x < -100.0){
+                x = -100.0
+            }
+        }
+
+        if(y>15){
+            y++
+            y = Math.ceil(y)
+            if (y > 100.0){
+                y = 100.0
+            }
+        } else if (y<-15) {
+            y--
+            y = Math.floor(y)
+            if (y < -100.0){
+                y = -100.0
+            }
+        }
         return Pair(x,y)
     }
 
@@ -680,17 +710,12 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
 
         val remappedRotationMatrix = FloatArray(16)
 
-        if (windowManager.getDefaultDisplay().rotation == Surface.ROTATION_90){
-            SensorManager.remapCoordinateSystem(rotationMatrix,
-                SensorManager.AXIS_Y,
-                SensorManager.AXIS_MINUS_X,
-                remappedRotationMatrix)
-        } else if (windowManager.getDefaultDisplay().rotation == Surface.ROTATION_270){
-            SensorManager.remapCoordinateSystem(rotationMatrix,
-                SensorManager.AXIS_MINUS_Y,
-                SensorManager.AXIS_X,
-                remappedRotationMatrix)
-        }
+
+
+        SensorManager.remapCoordinateSystem(rotationMatrix,
+            SensorManager.AXIS_MINUS_Y,
+            SensorManager.AXIS_X,
+            remappedRotationMatrix)
 
 
         val orientation = FloatArray(3)
@@ -708,9 +733,9 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
         az = (orientation[2] + 720 - offsetaz) % 360.0f
         if (az > 180) az -= 360
 
-        binding.ax.text = "AX: ${(ax/1.79).toInt()}"
-        binding.ay.text = "AY: ${(ay/1.79).toInt()}"
-        binding.az.text = "AZ: ${(az/1.79).toInt()}"
+        binding.ax.text = "AX: ${(ax).toInt()}"
+        binding.ay.text = "AY: ${(ay).toInt()}"
+        binding.az.text = "AZ: ${(az).toInt()}"
 
     }
 
@@ -774,6 +799,7 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
      * */
     private val task = Runnable {
         var sendSpeed = 1000
+        var sec = 0
         while (!Thread.interrupted()) {
             if (ConnectThread.isConnected) {
                 var fSum = 0
@@ -782,9 +808,9 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                 data.add(leftY)
                 data.add(rightX)
                 data.add(rightY)
-                data.add((ax/1.79).toInt())
-                data.add((ay/1.79).toInt())
-                data.add((az/1.79).toInt())
+                data.add((ax).toInt())
+                data.add((ay).toInt())
+                data.add((az).toInt())
                 if (f1) fSum += 2
                 if (f2) fSum += 4
                 if (f3) fSum += 8
@@ -800,10 +826,18 @@ class MainActivity : AppCompatActivity(), ConnectThread.Listener, SensorEventLis
                 try {
                     Thread.sleep(sendSpeed.toLong())
                 } catch (e: InterruptedException) {
+                    sendSpeed = 1000
+                    sec = 0
                     Log.e("RobotrackRC", e.stackTraceToString())
                 }
                 Log.d("RobotrackRC", "Sending speed = $sendSpeed")
-                if (sendSpeed > 100) sendSpeed -= 100
+
+                if(sec < 3){
+                    sec++
+                } else {
+                    if (sendSpeed > 100) sendSpeed -= 50
+                }
+
             }
         }
     }
